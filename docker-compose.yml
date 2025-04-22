@@ -1,0 +1,34 @@
+version: '3.12'
+
+services:
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.28.4
+    restart: unless-stopped
+    container_name: rag_weaviate
+    ports:
+      - "8080:8080" 
+      - "50051:50051"
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    environment:
+      QUERY_DEFAULTS_LIMIT: 500
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      CLUSTER_HOSTNAME: 'node1'
+      ENABLE_MODULES: 'text2vec-voyageai'
+      VOYAGEAI_APIKEY: "pa-McYB7iT5EsMX96OftXf9-QCiR0NUOSrPEzQPc6wadok"
+  api:
+    build: .
+    container_name: rag-api
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - weaviate
+  
+volumes:
+  weaviate_data:
