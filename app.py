@@ -1,10 +1,23 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 from document_hendler import DocumentHandler
 
 app = FastAPI()
 handler = DocumentHandler()
+
+ALLOWED_IPS = {"127.0.0.1", "192.168.1.10"} 
+
+class IPWhitelistMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        client_ip = request.client.host
+        if client_ip not in ALLOWED_IPS:
+            raise HTTPException(status_code=403, detail="Forbidden: IP not allowed")
+        return await call_next(request)
+
+app = FastAPI()
+app.add_middleware(IPWhitelistMiddleware)
 
 # -----------------------------
 # Pydantic Models
