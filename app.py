@@ -19,7 +19,7 @@ class IPWhitelistMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 app = FastAPI()
-app.add_middleware(IPWhitelistMiddleware)
+# app.add_middleware(IPWhitelistMiddleware)
 
 handler = DocumentHandler()
 
