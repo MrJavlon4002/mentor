@@ -1,12 +1,12 @@
 # Vector Database API
 
-This project provides a FastAPI-based API for managing products in a vector database, supporting multilingual product data, data uploads, and question-answering capabilities. The API allows users to create, retrieve, update, and delete products, upload text data, and ask questions based on the stored data.
+This project provides a FastAPI-based API for managing products in a vector database, supporting multilingual product data, data uploads, and question-answering capabilities. The API allows users to create, retrieve, update, delete products, upload text data, and ask questions based on stored data.
 
 ## Table of Contents
 - [Project Structure](#project-structure)
 - [Installation](#installation)
 - [API Endpoints](#api-endpoints)
-- [Usage](#usage)
+- [Usage Example](#usage-example)
 - [Notes](#notes)
 
 ## Project Structure
@@ -41,7 +41,7 @@ Below is the structure of the project directory:
    Configure necessary API keys in `api_keys.py` for external services (e.g., translation or database access).
 
 3. **Build and run with Docker Compose**:
-   Ensure Docker and Docker Compose are installed. Then, build and start the services defined in `docker-compose.yml`:
+   Ensure Docker and Docker Compose are installed. Build and start the services defined in `docker-compose.yml`:
    ```bash
    docker-compose up --build -d
    ```
@@ -51,9 +51,27 @@ Below is the structure of the project directory:
 
 ## API Endpoints
 
-The endpoints are defined in `app.py` and leverage the `DocumentHandler` class from `document_hendler.py` for vector database operations. Below are the available endpoints with cURL commands.
+The endpoints are defined in `app.py` and leverage the `DocumentHandler` class from `document_hendler.py` for vector database operations. Below are the available endpoints with cURL commands using generic placeholders.
 
-### 1. Create a Product
+### 1. Data Upload
+**Description**: Uploads text data to the vector database for a specified project and languages.
+
+**cURL Command**:
+```bash
+curl -X POST "http://localhost:8000/data_taking" \
+-H "Content-Type: application/json" \
+-d '{
+    "text": "<text>",
+    "project": "<project_name>",
+    "languages": ["<lang1>", "<lang2>"]
+}'
+```
+
+**Expected Responses**:
+- **200 OK**: `{"status": "success", "message": "Data inserted successfully."}`
+- **500 Internal Server Error**: `{"detail": "Error message"}`
+
+### 2. Create a Product
 **Description**: Creates a new product in the vector database for a specified project and language.
 
 **cURL Command**:
@@ -61,65 +79,53 @@ The endpoints are defined in `app.py` and leverage the `DocumentHandler` class f
 curl -X POST "http://localhost:8000/products" \
 -H "Content-Type: application/json" \
 -d '{
-    "details": {"name": "Sample Product", "description": "A sample product", "languages": ["en", "es"]},
-    "project_name": "test_project",
-    "lang": "en"
+    "details": {
+        "name": "<product_name>",
+        "description": "<product_description>",
+        "price": "<product_price>",
+        "id": "<product_id>",
+        "languages": ["<lang1>", "<lang2>"]
+    },
+    "project_name": "<project_name>",
+    "lang": "<lang>"
 }'
 ```
 
 **Expected Responses**:
-- **200 OK**: `{"status": "success", "message": "Product created for project 'test_project'."}`
+- **200 OK**: `{"status": "success", "message": "Product created for project '<project_name>'."}`
 - **500 Internal Server Error**: `{"detail": "Error message"}`
 
-### 2. Get a Product
+### 3. Get a Product
 **Description**: Retrieves a specific product by ID from the vector database for the specified languages.
 
 **cURL Command**:
 ```bash
-curl -X GET "http://localhost:8000/products/sample_product_id" \
+curl -X GET "http://localhost:8000/products/<product_id>" \
 -H "Content-Type: application/json" \
 -d '{
-    "project_name": "test_project",
-    "product_id": "sample_product_id",
-    "languages": ["en", "es"]
+    "project_name": "<project_name>",
+    "product_id": "<product_id>",
+    "languages": ["<lang1>", "<lang2>"]
 }'
 ```
 
 **Expected Responses**:
-- **200 OK**: `{"status": "success", "product": {...}}`
+- **200 OK**: `{"status": "success", "product": {"<lang>": {"name": "<product_name>", "description": "...", "price": "<product_price>", "id": "<product_id>", "languages": ["<lang1>", "<lang2>"]}}}`
 - **404 Not Found**: `{"detail": "Product not found in any language."}`
 - **500 Internal Server Error**: `{"detail": "Error message"}`
 
-### 3. Get All Products
+### 4. Get All Products
 **Description**: Retrieves all products for a specified project and languages.
 
 **cURL Command**:
 ```bash
-curl -X GET "http://localhost:8000/products?project_name=test_project&languages=en&languages=es" \
+curl -X GET "http://localhost:8000/products?project_name=<project_name>&languages=<lang1>&languages=<lang2>" \
 -H "Content-Type: application/json"
 ```
 
 **Expected Responses**:
-- **200 OK**: `{"status": "success", "products": {...}}`
+- **200 OK**: `{"status": "success", "products": {"<lang>": [{"name": "<product_name>", "description": "...", "price": "<product_price>", "id": "<product_id>", "languages": ["<lang1>", "<lang2>"]}, ...]}}`
 - **404 Not Found**: `{"detail": "No products found in any language."}`
-- **500 Internal Server Error**: `{"detail": "Error message"}`
-
-### 4. Update a Product
-**Description**: Updates an existing product in the vector database.
-
-**cURL Command**:
-```bash
-curl -X PUT "http://localhost:8000/products/sample_product_id" \
--H "Content-Type: application/json" \
--d '{
-    "project_name": "test_project",
-    "product_id": "sample_product_id",
-    "details": {"name": "Updated Product", "description": "Updated description", "languages": ["en", "es"]}
-}'
-```
-
-**Expected Responses**:
-- **200 OK**: `{"status": "success", "message": "Product 'sample_product_id' updated."}`
 - **500 Internal Server Error**: `{"detail": "Error message"}`
 
 ### 5. Delete a Product
@@ -127,17 +133,17 @@ curl -X PUT "http://localhost:8000/products/sample_product_id" \
 
 **cURL Command**:
 ```bash
-curl -X DELETE "http://localhost:8000/products/sample_product_id" \
+curl -X DELETE "http://localhost:8000/products/<product_id>" \
 -H "Content-Type: application/json" \
 -d '{
-    "project_name": "test_project",
-    "product_id": "sample_product_id",
-    "languages": ["en", "es"]
+    "project_name": "<project_name>",
+    "product_id": "<product_id>",
+    "languages": ["<lang1>", "<lang2>"]
 }'
 ```
 
 **Expected Responses**:
-- **200 OK**: `{"status": "success", "message": "Product 'sample_product_id' deleted."}`
+- **200 OK**: `{"status": "success", "message": "Product '<product_id>' deleted."}`
 - **400 Bad Request**: `{"detail": "Failed to delete product."}`
 - **500 Internal Server Error**: `{"detail": "Error message"}`
 
@@ -149,11 +155,11 @@ curl -X DELETE "http://localhost:8000/products/sample_product_id" \
 curl -X POST "http://localhost:8000/ask_question" \
 -H "Content-Type: application/json" \
 -d '{
-    "project_name": "test_project",
-    "user_question": "What is the product description?",
-    "history": ["Previous question"],
-    "lang": "en",
-    "company_data": {"company_name": "Test Inc"}
+    "project_name": "<project_name>",
+    "user_question": "<question>",
+    "history": ["<previous_question>"],
+    "lang": "<lang>",
+    "company_data": "<company_info>"
 }'
 ```
 
@@ -161,34 +167,75 @@ curl -X POST "http://localhost:8000/ask_question" \
 - **200 OK**: `{"status": "success", "answer": "..."}`
 - **500 Internal Server Error**: `{"detail": "Error message"}`
 
-### 7. Data Upload
-**Description**: Uploads text data to the vector database for a specified project and languages.
+## Usage Example
 
-**cURL Command**:
-```bash
-curl -X POST "http://localhost:8000/data_taking" \
--H "Content-Type: application/json" \
--d '{
-    "text": "Sample text data",
-    "project": "test_project",
-    "languages": ["en", "es"]
-}'
-```
+The following sequence demonstrates how to use the API with placeholder values:
 
-**Expected Responses**:
-- **200 OK**: `{"status": "success", "message": "Data inserted successfully."}`
-- **500 Internal Server Error**: `{"detail": "Error message"}`
+1. **Upload Data**:
+   ```bash
+   curl -X POST "http://localhost:8000/data_taking" \
+   -H "Content-Type: application/json" \
+   -d '{
+       "text": "<company_and_course_info>",
+       "project": "<project_name>",
+       "languages": ["<lang1>", "<lang2>"]
+   }'
+   ```
 
-## Usage
+2. **Create a Product**:
+   ```bash
+   curl -X POST "http://localhost:8000/products" \
+   -H "Content-Type: application/json" \
+   -d '{
+       "details": {
+           "name": "<course_name>",
+           "description": "<course_description>",
+           "price": "<course_price>",
+           "id": "<unique_id>",
+           "languages": ["<lang1>", "<lang2>"]
+       },
+       "project_name": "<project_name>",
+       "lang": "<lang1>"
+   }'
+   ```
 
-To interact with the API:
-1. Ensure the Docker containers are running (`docker-compose up --build -d`).
-2. Use the cURL commands above or tools like Postman to send requests.
-3. Replace `sample_product_id` and `test_project` with actual values from your database.
-4. For multilingual support, specify the desired languages in the `languages` field.
+3. **Get a Product**:
+   ```bash
+   curl -X GET "http://localhost:8000/products/<unique_id>" \
+   -H "Content-Type: application/json" \
+   -d '{
+       "project_name": "<project_name>",
+       "product_id": "<unique_id>",
+       "languages": ["<lang1>", "<lang2>"]
+   }'
+   ```
+
+4. **Delete a Product**:
+   ```bash
+   curl -X DELETE "http://localhost:8000/products/<unique_id>" \
+   -H "Content-Type: application/json" \
+   -d '{
+       "project_name": "<project_name>",
+       "product_id": "<unique_id>",
+       "languages": ["<lang1>", "<lang2>"]
+   }'
+   ```
+
+5. **Ask a Question**:
+   ```bash
+   curl -X POST "http://localhost:8000/ask_question" \
+   -H "Content-Type: application/json" \
+   -d '{
+       "project_name": "<project_name>",
+       "user_question": "<question>",
+       "history": [],
+       "lang": "<lang1>",
+       "company_data": "<company_info>"
+   }'
+   ```
 
 ## Notes
-- Replace `http://localhost:8000` with the actual server URL if deployed.
+- Replace placeholders (e.g., `<project_name>`, `<product_id>`, `<text>`) with actual values specific to your use case.
 - Ensure the `Content-Type: application/json` header is included for POST, PUT, and DELETE requests.
-- The `product_id` and `project_name` in the examples should be replaced with actual values from your database.
-- For troubleshooting, check the interactive API documentation at `http://localhost:8000/docs` or view container logs with `docker-compose logs`.# Izi-Ish-NLP
+- For generating unique IDs (e.g., `<product_id>`), use a UUID generator like `uuidgen` on Unix systems or a similar tool.
+- For troubleshooting, check the interactive API documentation at `http://localhost:8000/docs` or view container logs with `docker-compose logs`.
