@@ -111,9 +111,9 @@ class DocumentHandler:
 
         # Contextualize question
         standalone_questions = contextualize_question(
-            history, 
-            user_question, 
-            project_name=project_name,
+             chat_history=history, 
+             latest_question=user_question, 
+             project_name= project_name,
         )
 
         # Taking data from verctor database
@@ -127,7 +127,7 @@ class DocumentHandler:
         # Answering the question
         details_for_response = {
             "context": context,
-            "reformulations": standalone_questions["reformulations"],
+            "reformulations": standalone_questions["text"],
             "user_question": user_question,
             "project_name": project_name,
             "lang": lang,

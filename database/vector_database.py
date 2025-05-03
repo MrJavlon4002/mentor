@@ -7,7 +7,7 @@ class WeaviateDatabase:
         self.headers = {"X-VoyageAI-Api-Key": api_keys.VOYAGE_API_KEY}
 
     def _create_client(self):
-        return weaviate.connect_to_local(host="localhost", port=8080, headers=self.headers)
+        return weaviate.connect_to_local(host="weaviate", port=8080, headers=self.headers)
 
     def initialize_and_insert_data(self, row_data, project_name: str):
         project_name = project_name.lower()

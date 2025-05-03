@@ -1,23 +1,27 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 from document_hendler import DocumentHandler
 
-app = FastAPI()
-handler = DocumentHandler()
-
-ALLOWED_IPS = {"127.0.0.1", "192.168.1.10"} 
+ALLOWED_IPS = {"127.0.0.1", "192.168.1.10", "172.19.0.1"}
 
 class IPWhitelistMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         client_ip = request.client.host
+        print(f"Client IP: {client_ip}")
         if client_ip not in ALLOWED_IPS:
-            raise HTTPException(status_code=403, detail="Forbidden: IP not allowed")
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Forbidden: IP not allowed"}
+            )
         return await call_next(request)
 
 app = FastAPI()
 app.add_middleware(IPWhitelistMiddleware)
+
+handler = DocumentHandler()
 
 # -----------------------------
 # Pydantic Models
@@ -50,8 +54,13 @@ class AskQuestionRequest(BaseModel):
     lang: str
     company_data: Optional[Dict] = {}
 
+class DataTakingRequest(BaseModel):
+    text: str
+    project: str
+    languages: List[str]
+
 # -----------------------------
-# Product CRUD Endpoints
+# Endpoints
 # -----------------------------
 
 @app.post("/products")
@@ -64,7 +73,7 @@ async def create_product(request: ProductCreateRequest):
         )
         return {"status": "success", "message": f"Product created for project '{request.project_name}'."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.get("/products/{product_id}")
 async def get_product(request: ProductGetRequest):
@@ -75,10 +84,10 @@ async def get_product(request: ProductGetRequest):
             languages=request.languages
         )
         if product == "Product not found in any language.":
-            raise HTTPException(status_code=404, detail=product)
+            return JSONResponse(status_code=404, content={"detail": product})
         return {"status": "success", "product": product}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.get("/products")
 async def get_all_products(project_name: str, languages: List[str]):
@@ -88,10 +97,10 @@ async def get_all_products(project_name: str, languages: List[str]):
             languages=languages
         )
         if products == "No products found in any language.":
-            raise HTTPException(status_code=404, detail=products)
+            return JSONResponse(status_code=404, content={"detail": products})
         return {"status": "success", "products": products}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.put("/products/{product_id}")
 async def update_product(request: ProductUpdateRequest):
@@ -103,7 +112,7 @@ async def update_product(request: ProductUpdateRequest):
         )
         return {"status": "success", "message": f"Product '{request.product_id}' updated."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.delete("/products/{product_id}")
 async def delete_product(request: ProductDeleteRequest):
@@ -115,13 +124,9 @@ async def delete_product(request: ProductDeleteRequest):
         )
         if success:
             return {"status": "success", "message": f"Product '{request.product_id}' deleted."}
-        raise HTTPException(status_code=400, detail="Failed to delete product.")
+        return JSONResponse(status_code=400, content={"detail": "Failed to delete product."})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# -----------------------------
-# Question Asking Endpoint
-# -----------------------------
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.post("/ask_question")
 async def ask_question(request: AskQuestionRequest):
@@ -136,25 +141,16 @@ async def ask_question(request: AskQuestionRequest):
         answer = handler.ask_question(question_details=question_details)
         return {"status": "success", "answer": answer}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# -----------------------------
-# Data Uploading Endpoint
-# -----------------------------
-
-class DataTakingRequest(BaseModel):
-    text: str
-    project: str
-    languages: List[str]
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.post("/data_taking")
 async def data_taking(request: DataTakingRequest):
     try:
         handler.data_upload(
-            project=request.project,
-            text=request.text,
+            project_name=request.project,
+            row_data=request.text,
             languages=request.languages
         )
         return {"status": "success", "message": "Data inserted successfully."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse(status_code=500, content={"detail": str(e)})
