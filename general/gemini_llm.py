@@ -29,7 +29,7 @@ def call_gemini_with_functions(model_name: str, messages: str, api_key: str, sys
         print(f"Error during Gemini call: {e}")
         return {"error": str(e)}
 
-def contextualize_question(latest_question, project_name, chat_history=None):
+def contextualize_question(latest_question, project_id, chat_history=None, project_name=str, lang=str):
     # first thing: bind the local variable
     chat_history = chat_history or []
     chat_history = chat_history[-3:] if len(chat_history) > 3 else chat_history
@@ -38,16 +38,16 @@ def contextualize_question(latest_question, project_name, chat_history=None):
     system_instruction = (
         f"Your role is to reformulate user requests with precision for a sales assistant bot at {project_name}, adapting them based on their clarity and relevance, in the exact language of the *Latest question*. All reformulations must be phrased as questions, text, or requests from the user to the assistant bot. Follow these steps:\n\n"
         "1. **General Conversational Questions**:\n"
-        "   - If the *Latest question* is a greeting, casual remark, or general conversation (e.g., 'Hi there', 'How you doing?', 'Nice day'), do not broaden it; instead, output **1 grammatically corrected version** of the original text as a user request to the bot, without tying it to {project_name}.\n"
+        "   - If the *Latest question* is a greeting, casual remark, or general conversation (e.g., 'Hi there', 'How you doing?', 'Nice day'), do not broaden it; instead, output **1 grammatically corrected version** of the original text as a user request to the bot, without tying it to {project_id}.\n"
         "   - Example: 'Hi' becomes 'Hi!' (in the *Latest question*’s language).\n"
         "   - Example: 'How you doing?' becomes 'How are you doing?' (in the *Latest question*’s language).\n"
         "   - Example: 'nice day' becomes 'Isn’t it a nice day?' (in the *Latest question*’s language).\n\n"
         "2. **Abstract or Unrelated Questions**:\n"
-        "   - If the *Latest question* is vague, abstract, or unrelated to {project_name} (e.g., 'What’s this?' or 'How does it work?'), reformulate it into **1 broader, grammatically correct question or request** to the bot, without forcing a connection to {project_name}.\n"
+        "   - If the *Latest question* is vague, abstract, or unrelated to {project_id} (e.g., 'What’s this?' or 'How does it work?'), reformulate it into **1 broader, grammatically correct question or request** to the bot, without forcing a connection to {project_id}.\n"
         "   - Example: 'What’s this?' becomes 'What can you explain to me?' (in the *Latest question*’s language).\n"
         "   - Example: 'How does it work?' becomes 'How do things operate here?' (in the *Latest question*’s language).\n\n"
-        "3. **Relevant but Imprecise Questions About {project_name}**:\n"
-        "   - If the *Latest question* is somewhat clear and related to {project_name} but can be sharpened, create **2 distinct reformulations** in the language of the *Latest question*, phrased as user questions or requests to the bot, to make it more precise and actionable, explicitly tying it to {project_name}.\n"
+        "3. **Relevant but Imprecise Questions About {project_id}**:\n"
+        "   - If the *Latest question* is somewhat clear and related to {project_id} but can be sharpened, create **2 distinct reformulations** in the language of the *Latest question*, phrased as user questions or requests to the bot, to make it more precise and actionable, explicitly tying it to {project_id}.\n"
         "   - Focus each on a different aspect (e.g., price vs. features), using chat history for context.\n"
         f"   - Example: 'Is Excel good?' becomes:\n"
         f"     - 'Is {project_name}’s Excel course worth trying?'\n"
@@ -57,7 +57,7 @@ def contextualize_question(latest_question, project_name, chat_history=None):
         "- Default to Uzbek if the *Latest question*’s language is unclear or mixed.\n"
         "- Keep phrasing natural, concise, and specific, as if the user is addressing a sales assistant bot.\n"
         "- Use chat history to avoid course mix-ups and maintain relevance for company-related questions.\n"
-        "- For general conversational questions, correct grammar only without broadening or tying to {project_name}; for abstract/unrelated questions, broaden and correct grammar without {project_name}; for relevant questions about {project_name}, refine with a clear {project_name} connection.\n"
+        "- For general conversational questions, correct grammar only without broadening or tying to {project_id}; for abstract/unrelated questions, broaden and correct grammar without {project_id}; for relevant questions about {project_id}, refine with a clear {project_id} connection.\n"
     )
 
     messages = f"Chat history: {chat_history}\nLatest question: {latest_question}"
@@ -77,6 +77,7 @@ def answer_question(question_details: dict) -> str:
     context = question_details["context"]
     reformulations = question_details["reformulations"]
     user_question = question_details["user_question"]
+    project_id = question_details["project_id"]
     project_name = question_details["project_name"]
     lang = question_details["lang"]
     company_data = question_details["company_data"]

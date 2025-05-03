@@ -62,7 +62,7 @@ curl -X POST "http://localhost:8000/data_taking" \
 -H "Content-Type: application/json" \
 -d '{
     "text": "<text>",
-    "project": "<project_name>",
+    "project": "<project_id>",
     "languages": ["<lang1>", "<lang2>"]
 }'
 ```
@@ -86,13 +86,13 @@ curl -X POST "http://localhost:8000/products" \
         "id": "<product_id>",
         "languages": ["<lang1>", "<lang2>"]
     },
-    "project_name": "<project_name>",
+    "project_id": "<project_id>",
     "lang": "<lang>"
 }'
 ```
 
 **Expected Responses**:
-- **200 OK**: `{"status": "success", "message": "Product created for project '<project_name>'."}`
+- **200 OK**: `{"status": "success", "message": "Product created for project '<project_id>'."}`
 - **500 Internal Server Error**: `{"detail": "Error message"}`
 
 ### 3. Get a Product
@@ -103,7 +103,7 @@ curl -X POST "http://localhost:8000/products" \
 curl -X GET "http://localhost:8000/products/<product_id>" \
 -H "Content-Type: application/json" \
 -d '{
-    "project_name": "<project_name>",
+    "project_id": "<project_id>",
     "product_id": "<product_id>",
     "languages": ["<lang1>", "<lang2>"]
 }'
@@ -119,7 +119,7 @@ curl -X GET "http://localhost:8000/products/<product_id>" \
 
 **cURL Command**:
 ```bash
-curl -X GET "http://localhost:8000/products?project_name=<project_name>&languages=<lang1>&languages=<lang2>" \
+curl -X GET "http://localhost:8000/products?project_id=<project_id>&languages=<lang1>&languages=<lang2>" \
 -H "Content-Type: application/json"
 ```
 
@@ -136,7 +136,7 @@ curl -X GET "http://localhost:8000/products?project_name=<project_name>&language
 curl -X DELETE "http://localhost:8000/products/<product_id>" \
 -H "Content-Type: application/json" \
 -d '{
-    "project_name": "<project_name>",
+    "project_id": "<project_id>",
     "product_id": "<product_id>",
     "languages": ["<lang1>", "<lang2>"]
 }'
@@ -155,6 +155,7 @@ curl -X DELETE "http://localhost:8000/products/<product_id>" \
 curl -X POST "http://localhost:8000/ask_question" \
 -H "Content-Type: application/json" \
 -d '{
+    "project_id": "<project_id>",
     "project_name": "<project_name>",
     "user_question": "<question>",
     "history": ["<previous_question>"],
@@ -177,7 +178,7 @@ The following sequence demonstrates how to use the API with placeholder values:
    -H "Content-Type: application/json" \
    -d '{
        "text": "<company_and_course_info>",
-       "project": "<project_name>",
+       "project": "<project_id>",
        "languages": ["<lang1>", "<lang2>"]
    }'
    ```
@@ -194,7 +195,7 @@ The following sequence demonstrates how to use the API with placeholder values:
            "id": "<unique_id>",
            "languages": ["<lang1>", "<lang2>"]
        },
-       "project_name": "<project_name>",
+       "project_id": "<project_id>",
        "lang": "<lang1>"
    }'
    ```
@@ -204,7 +205,7 @@ The following sequence demonstrates how to use the API with placeholder values:
    curl -X GET "http://localhost:8000/products/<unique_id>" \
    -H "Content-Type: application/json" \
    -d '{
-       "project_name": "<project_name>",
+       "project_id": "<project_id>",
        "product_id": "<unique_id>",
        "languages": ["<lang1>", "<lang2>"]
    }'
@@ -215,7 +216,7 @@ The following sequence demonstrates how to use the API with placeholder values:
    curl -X DELETE "http://localhost:8000/products/<unique_id>" \
    -H "Content-Type: application/json" \
    -d '{
-       "project_name": "<project_name>",
+       "project_id": "<project_id>",
        "product_id": "<unique_id>",
        "languages": ["<lang1>", "<lang2>"]
    }'
@@ -226,6 +227,7 @@ The following sequence demonstrates how to use the API with placeholder values:
    curl -X POST "http://localhost:8000/ask_question" \
    -H "Content-Type: application/json" \
    -d '{
+       "project_id": "<project_id>",
        "project_name": "<project_name>",
        "user_question": "<question>",
        "history": [],
@@ -235,7 +237,7 @@ The following sequence demonstrates how to use the API with placeholder values:
    ```
 
 ## Notes
-- Replace placeholders (e.g., `<project_name>`, `<product_id>`, `<text>`) with actual values specific to your use case.
+- Replace placeholders (e.g., `<project_id>`, `<product_id>`, `<text>`) with actual values specific to your use case.
 - Ensure the `Content-Type: application/json` header is included for POST, PUT, and DELETE requests.
 - For generating unique IDs (e.g., `<product_id>`), use a UUID generator like `uuidgen` on Unix systems or a similar tool.
 - For troubleshooting, check the interactive API documentation at `http://localhost:8000/docs` or view container logs with `docker-compose logs`.

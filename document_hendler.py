@@ -10,16 +10,16 @@ class DocumentHandler:
         """Initializes the document handler with a vector database client and prepares the database."""
         self.client = WeaviateDatabase()
 
-    def data_upload(self, project_name, row_data, languages: list = ['uz', 'ru']):
+    def data_upload(self, project_id, row_data, languages: list = ['uz', 'ru']):
         """Initializes the vector database and inserts data."""
         processed_data = prepare_data(row_data, languages)
-        self.client.initialize_and_insert_data(processed_data, project_name=project_name)
+        self.client.initialize_and_insert_data(processed_data, project_id=project_id)
         print("Data insertion complete.")
 
 
 
     # Create a product in the vector database
-    def create_product(self, details: dict, project_name: str, lang: str,):
+    def create_product(self, details: dict, project_id: str, lang: str,):
         """Creates a product in the vector database."""
         source_lang = language_detection(str(details['description']))
         translated_data = {}
@@ -36,33 +36,33 @@ class DocumentHandler:
                         translated[key] = value
                 translated_data[lang] = translated
             
-            self.client.add_product(project_name=f"{project_name}_{lang}", details=translated_data[lang])
+            self.client.add_product(project_id=f"{project_id}_{lang}", details=translated_data[lang])
             print(f"Product created for language '{lang}'.")
 
     
     # Get a product from the vector database
-    def get_product(self, project_name: str, product_id: str, languages: list):
+    def get_product(self, project_id: str, product_id: str, languages: list):
 
         """Retrieves a product from the vector database."""
         product = {}
         for lang in languages:
-            product[lang] = self.client.get_product(project_name=f"{project_name}_{lang}", product_id=product_id)
+            product[lang] = self.client.get_product(project_id=f"{project_id}_{lang}", product_id=product_id)
             if product[lang]:
                 print(f"Product found in language '{lang}'.")
         return product[lang] if product[lang] else "Product not found in any language."
     
     # Get all products from the vector database
-    def get_all_products(self, project_name: str, languages: list):
+    def get_all_products(self, project_id: str, languages: list):
         """Retrieves all products from the vector database."""
         products = {}
         for lang in languages:
-            products[lang] = self.client.get_all_products(project_name=f"{project_name}_{lang}")
+            products[lang] = self.client.get_all_products(project_id=f"{project_id}_{lang}")
             if products[lang]:
                 print(f"Products found in language '{lang}'.")
         return products[lang] if products[lang] else "No products found in any language."
     
     # Update a product in the vector database
-    def update_product(self, project_name: str, product_id: str, details: dict):
+    def update_product(self, project_id: str, product_id: str, details: dict):
         """Updates a product in the vector database."""
 
         for lang in details['languages']:
@@ -76,24 +76,24 @@ class DocumentHandler:
                         translated[key] = value
                 details[lang] = translated
             
-            self.client.update_product(project_name=f"{project_name}_{lang}", product_id=product_id, details=details[lang])
+            self.client.update_product(project_id=f"{project_id}_{lang}", product_id=product_id, details=details[lang])
             print(f"Product updated for language '{lang}'.")
 
     # Delete a product from the vector database
-    def delete_product(self, project_name: str, product_id: str, languages: list):
+    def delete_product(self, project_id: str, product_id: str, languages: list):
         """Deletes a product from the vector database."""
         for lang in languages:
-            self.client.delete_product(project_name=f"{project_name}_{lang}", product_id=product_id)
-            print(f"Product with ID '{product_id}' deleted from project '{project_name}_{lang}'.")
+            self.client.delete_product(project_id=f"{project_id}_{lang}", product_id=product_id)
+            print(f"Product with ID '{product_id}' deleted from project '{project_id}_{lang}'.")
         return True
 
 
 
 
     # Search for a product in the vector database
-    def query_core_data(self, project_name: str, query: str, lang: str) -> str:
+    def query_core_data(self, project_id: str, query: str, lang: str) -> str:
         """Queries the database for relevant information."""
-        results = self.client.hybrid_query(query=query, collection_name=f"{project_name}_{lang}")
+        results = self.client.hybrid_query(query=query, collection_name=f"{project_id}_{lang}")
         return results if results else "No relevant data found."
     
 
@@ -105,20 +105,23 @@ class DocumentHandler:
 
         history = question_details["history"]
         user_question = question_details["user_question"]
-        project_name = question_details["project_name"]
+        project_id = question_details["project_id"]
         lang = question_details["lang"]
         company_data = question_details["company_data"]
+        project_name = question_details["project_name"]
 
         # Contextualize question
         standalone_questions = contextualize_question(
              chat_history=history, 
              latest_question=user_question, 
-             project_name= project_name,
+             project_id= project_id,
+             project_name=project_name,
+             lang=lang,
         )
 
         # Taking data from verctor database
         context = [
-            self.query_core_data(query=question, lang=lang, project_name=project_name)
+            self.query_core_data(query=question, lang=lang, project_id=project_id)
             for question in standalone_questions["text"] if question
         ]
 
@@ -129,6 +132,7 @@ class DocumentHandler:
             "context": context,
             "reformulations": standalone_questions["text"],
             "user_question": user_question,
+            "project_id": project_id,
             "project_name": project_name,
             "lang": lang,
             "history": history,

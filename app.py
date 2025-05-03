@@ -29,25 +29,26 @@ handler = DocumentHandler()
 
 class ProductCreateRequest(BaseModel):
     details: Dict
-    project_name: str
+    project_id: str
     lang: str
 
 class ProductGetRequest(BaseModel):
-    project_name: str
+    project_id: str
     product_id: str
     languages: List[str]
 
 class ProductUpdateRequest(BaseModel):
-    project_name: str
+    project_id: str
     product_id: str
     details: Dict
 
 class ProductDeleteRequest(BaseModel):
-    project_name: str
+    project_id: str
     product_id: str
     languages: List[str]
 
 class AskQuestionRequest(BaseModel):
+    project_id: str
     project_name: str
     user_question: str
     history: Optional[List[str]] = []
@@ -68,10 +69,10 @@ async def create_product(request: ProductCreateRequest):
     try:
         handler.create_product(
             details=request.details,
-            project_name=request.project_name,
+            project_id=request.project_id,
             lang=request.lang
         )
-        return {"status": "success", "message": f"Product created for project '{request.project_name}'."}
+        return {"status": "success", "message": f"Product created for project '{request.project_id}'."}
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
@@ -79,7 +80,7 @@ async def create_product(request: ProductCreateRequest):
 async def get_product(request: ProductGetRequest):
     try:
         product = handler.get_product(
-            project_name=request.project_name,
+            project_id=request.project_id,
             product_id=request.product_id,
             languages=request.languages
         )
@@ -90,10 +91,10 @@ async def get_product(request: ProductGetRequest):
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.get("/products")
-async def get_all_products(project_name: str, languages: List[str]):
+async def get_all_products(project_id: str, languages: List[str]):
     try:
         products = handler.get_all_products(
-            project_name=project_name,
+            project_id=project_id,
             languages=languages
         )
         if products == "No products found in any language.":
@@ -106,7 +107,7 @@ async def get_all_products(project_name: str, languages: List[str]):
 async def update_product(request: ProductUpdateRequest):
     try:
         handler.update_product(
-            project_name=request.project_name,
+            project_id=request.project_id,
             product_id=request.product_id,
             details=request.details
         )
@@ -118,7 +119,7 @@ async def update_product(request: ProductUpdateRequest):
 async def delete_product(request: ProductDeleteRequest):
     try:
         success = handler.delete_product(
-            project_name=request.project_name,
+            project_id=request.project_id,
             product_id=request.product_id,
             languages=request.languages
         )
@@ -132,9 +133,10 @@ async def delete_product(request: ProductDeleteRequest):
 async def ask_question(request: AskQuestionRequest):
     try:
         question_details = {
+            "project_id": request.project_id,
+            "project_name": request.project_name,
             "history": request.history,
             "user_question": request.user_question,
-            "project_name": request.project_name,
             "lang": request.lang,
             "company_data": request.company_data
         }
@@ -147,7 +149,7 @@ async def ask_question(request: AskQuestionRequest):
 async def data_taking(request: DataTakingRequest):
     try:
         handler.data_upload(
-            project_name=request.project,
+            project_id=request.project,
             row_data=request.text,
             languages=request.languages
         )
