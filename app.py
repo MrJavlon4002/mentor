@@ -7,7 +7,7 @@ from document_hendler import DocumentHandler
 app = FastAPI()
 handler = DocumentHandler()
 
-ALLOWED_IPS = {"127.0.0.1", "192.168.1.10"} 
+ALLOWED_IPS = {"127.0.0.1", "localhost"}
 
 class IPWhitelistMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -17,7 +17,7 @@ class IPWhitelistMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 app = FastAPI()
-app.add_middleware(IPWhitelistMiddleware)
+# app.add_middleware(IPWhitelistMiddleware)
 
 # -----------------------------
 # Pydantic Models
