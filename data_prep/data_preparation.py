@@ -21,15 +21,10 @@ def language_detection(query: str) -> str:
             return 'ru'
     return 'uz'
 
-def prepare_data(text, languages = ['uzn', 'rus']):
+def prepare_data(text, languages = ['uz', 'ru']):
     
     source_lang = language_detection(text)
-    
-    lang_map = {
-        'uz': 'uzn_Latn',
-        'ru': 'rus_Cyrl',
-        'en': 'eng_Latn'
-    }
+
     
     formatted_data = preprocess_text(text)
     splitted_data = split_text(formatted_data, 2000, 10)
@@ -58,8 +53,8 @@ def prepare_data(text, languages = ['uzn', 'rus']):
         for lang in languages:
             if lang != source_lang:
                 time.sleep(1.3) 
-                translated_title = translate_text(json_data['title'], lang_map[source_lang], lang_map[lang])
-                translated_text = translate_text(json_data['text'], lang_map[source_lang], lang_map[lang])
+                translated_title = translate_text(json_data['title'], source_lang, lang)
+                translated_text = translate_text(json_data['text'], source_lang, lang)
 
                 data[lang][f"chunk_{i}"] = {
                     'title': translated_title,

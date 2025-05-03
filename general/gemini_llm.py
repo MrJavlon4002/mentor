@@ -74,7 +74,15 @@ def contextualize_question(chat_history: list, latest_question: str, project_nam
     return result
 
 
-def answer_question(context: list, reformulations: list[str], user_question: str, project_name: str, chat_history: list, lang: str):
+def answer_question(question_details: dict) -> str:
+
+    context = question_details["context"]
+    reformulations = question_details["reformulations"]
+    user_question = question_details["user_question"]
+    project_name = question_details["project_name"]
+    lang = question_details["lang"]
+    company_data = question_details["company_data"]
+
     chat_history = chat_history[-3:] if len(chat_history) > 3 else chat_history
     system_instruction = f"""
 You are a professional sales manager for {project_name}, assisting users primarily in {lang}. If {lang} is undefined or invalid, use the exact language of the *Main question*. Default to Uzbek if both {lang} and the *Main question’s language are unclear. Your role is to assist customers by answering the *Main question* directly in {lang} with kindness and a human-like tone, using *Company Data* for product details, pricing, and availability, and *Chat history* for context, while addressing sales-related queries in a friendly way. Never greet the user unless explicitly required by the *Main question*.
@@ -130,7 +138,7 @@ The current date is **March 06, 2025**. Your knowledge is continuously updated w
 - *Chat history*: Prior conversation context.
 
 #### Company general informaton
-Osnova - sizning karyerangiz bo‘yicha ko‘makchingiz. Biz sizga kasb tanlashda yordam beramiz, zamonaviy bilim va ko‘nikmalar beramiz, yetakchi kompaniyalar bilan tanishtirамiz hamda professional jamiyatning a’zosiga aylantiramiz. Biz yangi kasblarga o‘rgatamiz, ko‘nikmalarni rivojlantiramiz, o‘z yo‘lingizni tanlashga va zamonaviy karyera qurishga ko‘maklashamiz.
+ - *Company Data*: {context}
 """
     print(f" - Main question: {user_question}\n - Documentary questions: {reformulations}\n - Language: {lang}\n - Context: {context}\n - Chat history: {chat_history}")
     messages = f"*Company Data*: {context}\n*Documentary questions*: {reformulations}, *Main question*: {user_question}, *Chat history*: {chat_history}."

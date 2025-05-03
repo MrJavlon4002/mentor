@@ -16,11 +16,16 @@ def preprocess_text(text):
     return text
 
 def translate_text(text, source_lang, target_lang, model="tilmoch"):
+    lang_map = {
+        'uz': "uzn_Latn",
+        'ru': 'rus_Cyrl',
+        'en': 'eng_Latn'
+    }
     text = preprocess_text(text)
     payload = {
         "text": text,
-        "source_lang": source_lang,
-        "target_lang": target_lang,
+        "source_lang": lang_map[source_lang],
+        "target_lang": lang_map[target_lang],
         "model": model
     }
 
