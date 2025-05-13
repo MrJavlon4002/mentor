@@ -1,243 +1,209 @@
-# Vector Database API
+Here is a complete `README.md` for your FastAPI project, including setup instructions and documentation for all available endpoints:
 
-This project provides a FastAPI-based API for managing products in a vector database, supporting multilingual product data, data uploads, and question-answering capabilities. The API allows users to create, retrieve, update, delete products, upload text data, and ask questions based on stored data.
+---
 
-## Table of Contents
-- [Project Structure](#project-structure)
-- [Installation](#installation)
-- [API Endpoints](#api-endpoints)
-- [Usage Example](#usage-example)
-- [Notes](#notes)
+````markdown
+# 🧠 IZI-NLP Product & Knowledge API
 
-## Project Structure
+A FastAPI-based multilingual product and Q&A platform. This API allows you to create, update, retrieve, delete products across multiple languages, as well as ask questions using contextual project data.
 
-Below is the structure of the project directory:
+---
 
-```
-├── __pycache__             # Compiled Python bytecode
-├── api_keys.py             # API key configurations
-├── app.py                  # FastAPI application with endpoint definitions
-├── data                    # Directory for data storage
-├── data_prep               # Data preparation scripts
-├── database                # Database-related scripts
-├── docker-compose.yml      # Docker Compose configuration
-├── Dockerfile              # Docker configuration for the application
-├── document_hendler.py     # Core logic for handling documents and vector database operations
-├── general                 # General utility scripts
-├── main.py                 # Entry point for running the application
-├── requirements.txt        # Python dependencies
-└── Readme.md               # Project documentation
-```
+## 🚀 Getting Started
 
-## Installation
+### 1. Clone the repository
 
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd <repository-directory>
-   ```
-
-2. **Set up API keys**:
-   Configure necessary API keys in `api_keys.py` for external services (e.g., translation or database access).
-
-3. **Build and run with Docker Compose**:
-   Ensure Docker and Docker Compose are installed. Build and start the services defined in `docker-compose.yml`:
-   ```bash
-   docker-compose up --build -d
-   ```
-
-4. **Access the API**:
-   The API will be available at `http://localhost:8000`. Explore the interactive API documentation at `http://localhost:8000/docs`.
-
-## API Endpoints
-
-The endpoints are defined in `app.py` and leverage the `DocumentHandler` class from `document_hendler.py` for vector database operations. Below are the available endpoints with cURL commands using generic placeholders.
-
-### 1. Data Upload
-**Description**: Uploads text data to the vector database for a specified project and languages.
-
-**cURL Command**:
 ```bash
-curl -X POST "http://localhost:8000/data_taking" \
--H "Content-Type: application/json" \
--d '{
-    "text": "<text>",
-    "project": "<project_id>",
-    "languages": ["<lang1>", "<lang2>"]
-}'
-```
+git clone https://github.com/your-username/izi-nlp.git
+cd izi-nlp
+````
 
-**Expected Responses**:
-- **200 OK**: `{"status": "success", "message": "Data inserted successfully."}`
-- **500 Internal Server Error**: `{"detail": "Error message"}`
+### 2. Install dependencies
 
-### 2. Create a Product
-**Description**: Creates a new product in the vector database for a specified project and language.
-
-**cURL Command**:
 ```bash
-curl -X POST "http://localhost:8000/products" \
--H "Content-Type: application/json" \
--d '{
-    "details": {
-        "name": "<product_name>",
-        "description": "<product_description>",
-        "price": "<product_price>",
-        "id": "<product_id>",
-        "languages": ["<lang1>", "<lang2>"]
-    },
-    "project_id": "<project_id>",
-    "lang": "<lang>"
-}'
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-**Expected Responses**:
-- **200 OK**: `{"status": "success", "message": "Product created for project '<project_id>'."}`
-- **500 Internal Server Error**: `{"detail": "Error message"}`
+### 3. Run the app
 
-### 3. Get a Product
-**Description**: Retrieves a specific product by ID from the vector database for the specified languages.
-
-**cURL Command**:
 ```bash
-curl -X GET "http://localhost:8000/products/<product_id>" \
--H "Content-Type: application/json" \
--d '{
-    "project_id": "<project_id>",
-    "product_id": "<product_id>",
-    "languages": ["<lang1>", "<lang2>"]
-}'
+uvicorn main:app --reload
 ```
 
-**Expected Responses**:
-- **200 OK**: `{"status": "success", "product": {"<lang>": {"name": "<product_name>", "description": "...", "price": "<product_price>", "id": "<product_id>", "languages": ["<lang1>", "<lang2>"]}}}`
-- **404 Not Found**: `{"detail": "Product not found in any language."}`
-- **500 Internal Server Error**: `{"detail": "Error message"}`
+---
 
-### 4. Get All Products
-**Description**: Retrieves all products for a specified project and languages.
+## 🛡️ Security
 
-**cURL Command**:
-```bash
-curl -X GET "http://localhost:8000/products?project_id=<project_id>&languages=<lang1>&languages=<lang2>" \
--H "Content-Type: application/json"
+> By default, the IP whitelist middleware is **disabled**. To enable:
+
+Uncomment:
+
+```python
+# app.add_middleware(IPWhitelistMiddleware)
 ```
 
-**Expected Responses**:
-- **200 OK**: `{"status": "success", "products": {"<lang>": [{"name": "<product_name>", "description": "...", "price": "<product_price>", "id": "<product_id>", "languages": ["<lang1>", "<lang2>"]}, ...]}}`
-- **404 Not Found**: `{"detail": "No products found in any language."}`
-- **500 Internal Server Error**: `{"detail": "Error message"}`
+Add allowed IPs to the `ALLOWED_IPS` set.
 
-### 5. Delete a Product
-**Description**: Deletes a product by ID from the vector database for the specified languages.
+---
 
-**cURL Command**:
-```bash
-curl -X DELETE "http://localhost:8000/products/<product_id>" \
--H "Content-Type: application/json" \
--d '{
-    "project_id": "<project_id>",
-    "product_id": "<product_id>",
-    "languages": ["<lang1>", "<lang2>"]
-}'
+## 📚 API Documentation
+
+> Once running, access **Swagger UI** at:
+> [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+---
+
+## 📦 Endpoints
+
+### 🔹 `POST /products` — Create Product
+
+Create a multilingual product from a base language.
+
+**Request body:**
+
+```json
+{
+  "details": { "id": "123", "name": "Test", "details": { "desc": "Example" }, "languages": ["en", "ru"] },
+  "project_id": "osnova",
+  "lang": "en"
+}
 ```
 
-**Expected Responses**:
-- **200 OK**: `{"status": "success", "message": "Product '<product_id>' deleted."}`
-- **400 Bad Request**: `{"detail": "Failed to delete product."}`
-- **500 Internal Server Error**: `{"detail": "Error message"}`
+---
 
-### 6. Ask a Question
-**Description**: Handles user queries by fetching relevant data and generating a response.
+### 🔹 `GET /products/{product_id}` — Get Product
 
-**cURL Command**:
-```bash
-curl -X POST "http://localhost:8000/ask_question" \
--H "Content-Type: application/json" \
--d '{
-    "project_id": "<project_id>",
-    "project_name": "<project_name>",
-    "user_question": "<question>",
-    "history": ["<previous_question>"],
-    "lang": "<lang>",
-    "company_data": "<company_info>"
-}'
+Fetch a product in all specified languages.
+
+**Query params:**
+
+* `project_id`: string
+* `languages`: list of language codes (e.g. `en,ru`)
+
+---
+
+### 🔹 `GET /products` — Get All Products
+
+List all products for a project in multiple languages.
+
+**Query params:**
+
+* `project_id`: string
+* `languages`: list of language codes
+
+---
+
+### 🔹 `PUT /products/{product_id}` — Update Product
+
+Update a product in all its languages.
+
+**Request body:**
+
+```json
+{
+  "project_id": "osnova",
+  "product_id": "123",
+  "details": {
+    "id": "123",
+    "name": "Updated Name",
+    "details": { "desc": "Updated description" },
+    "languages": ["en", "ru"]
+  }
+}
 ```
 
-**Expected Responses**:
-- **200 OK**: `{"status": "success", "answer": "..."}`
-- **500 Internal Server Error**: `{"detail": "Error message"}`
+---
 
-## Usage Example
+### 🔹 `DELETE /products/{product_id}` — Delete Product
 
-The following sequence demonstrates how to use the API with placeholder values:
+Delete a product across multiple languages.
 
-1. **Upload Data**:
-   ```bash
-   curl -X POST "http://localhost:8000/data_taking" \
-   -H "Content-Type: application/json" \
-   -d '{
-       "text": "<company_and_course_info>",
-       "project": "<project_id>",
-       "languages": ["<lang1>", "<lang2>"]
-   }'
-   ```
+**Query params:**
 
-2. **Create a Product**:
-   ```bash
-   curl -X POST "http://localhost:8000/products" \
-   -H "Content-Type: application/json" \
-   -d '{
-       "details": {
-           "name": "<course_name>",
-           "description": "<course_description>",
-           "price": "<course_price>",
-           "id": "<unique_id>",
-           "languages": ["<lang1>", "<lang2>"]
-       },
-       "project_id": "<project_id>",
-       "lang": "<lang1>"
-   }'
-   ```
+* `project_id`: string
+* `languages`: list of language codes
 
-3. **Get a Product**:
-   ```bash
-   curl -X GET "http://localhost:8000/products/<unique_id>" \
-   -H "Content-Type: application/json" \
-   -d '{
-       "project_id": "<project_id>",
-       "product_id": "<unique_id>",
-       "languages": ["<lang1>", "<lang2>"]
-   }'
-   ```
+---
 
-4. **Delete a Product**:
-   ```bash
-   curl -X DELETE "http://localhost:8000/products/<unique_id>" \
-   -H "Content-Type: application/json" \
-   -d '{
-       "project_id": "<project_id>",
-       "product_id": "<unique_id>",
-       "languages": ["<lang1>", "<lang2>"]
-   }'
-   ```
+### 🔹 `POST /ask_question` — Ask Question
 
-5. **Ask a Question**:
-   ```bash
-   curl -X POST "http://localhost:8000/ask_question" \
-   -H "Content-Type: application/json" \
-   -d '{
-       "project_id": "<project_id>",
-       "project_name": "<project_name>",
-       "user_question": "<question>",
-       "history": [],
-       "lang": "<lang1>",
-       "company_data": "<company_info>"
-   }'
-   ```
+Ask a question about project-specific content with history.
 
-## Notes
-- Replace placeholders (e.g., `<project_id>`, `<product_id>`, `<text>`) with actual values specific to your use case.
-- Ensure the `Content-Type: application/json` header is included for POST, PUT, and DELETE requests.
-- For generating unique IDs (e.g., `<product_id>`), use a UUID generator like `uuidgen` on Unix systems or a similar tool.
-- For troubleshooting, check the interactive API documentation at `http://localhost:8000/docs` or view container logs with `docker-compose logs`.
+**Request body:**
+
+```json
+{
+  "project_id": "osnova",
+  "project_name": "Osnova Q&A",
+  "user_question": "What is this product about?",
+  "lang": "en",
+  "history": [],
+  "company_data": "..."
+}
+```
+
+---
+
+### 🔹 `DELETE /delete_project` — Delete Entire Project
+
+Deletes all product data associated with a project.
+
+**Request body:**
+
+```json
+{
+  "project_id": "osnova",
+  "languages": ["en", "ru"]
+}
+```
+
+---
+
+### 🔹 `POST /data_upload` — Upload Raw Data
+
+Used for uploading structured row data into a project.
+
+**Request body:**
+
+```json
+{
+  "project_id": "osnova",
+  "row_data": "Some tabular data here",
+  "languages": ["en", "ru"]
+}
+```
+
+---
+
+## 🧠 Notes
+
+* Translations are powered by an LLM (via `call_llm_with_functions`)
+* Product content is always stored per-language: `project_id_<lang>`
+
+---
+
+## 📂 Project Structure
+
+```
+.
+├── main.py               # FastAPI app
+├── document_handler.py   # Product and QA logic
+├── requirements.txt
+└── README.md             # ← you are here
+```
+
+---
+
+## 📫 Contact
+
+For support or collaboration, reach out at:
+`valiyevjavlon001@gmail.com`
+
+---
+
+```
+
+Let me know if you want to include `example curl` commands or add authentication support.
+```

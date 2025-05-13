@@ -3,7 +3,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict
-from document_hendler import DocumentHandler
+from document_handler import DocumentHandler
 
 ALLOWED_IPS = {"127.0.0.1", "192.168.1.10", "172.19.0.1"}
 
@@ -53,11 +53,15 @@ class AskQuestionRequest(BaseModel):
     user_question: str
     history: Optional[List[str]] = []
     lang: str
-    company_data: Optional[Dict] = {}
+    company_data: Optional[str] = ""
 
-class DataTakingRequest(BaseModel):
-    text: str
-    project: str
+class DeleteProjectRequest(BaseModel):
+    project_id: str
+    languages: List[str]
+
+class DataUploadRequest(BaseModel):
+    project_id: str
+    row_data: str
     languages: List[str]
 
 # -----------------------------
@@ -77,12 +81,12 @@ async def create_product(request: ProductCreateRequest):
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.get("/products/{product_id}")
-async def get_product(request: ProductGetRequest):
+async def get_product(project_id: str, product_id: str, languages: List[str]):
     try:
         product = handler.get_product(
-            project_id=request.project_id,
-            product_id=request.product_id,
-            languages=request.languages
+            project_id=project_id,
+            product_id=product_id,
+            languages=languages
         )
         if product == "Product not found in any language.":
             return JSONResponse(status_code=404, content={"detail": product})
@@ -104,27 +108,27 @@ async def get_all_products(project_id: str, languages: List[str]):
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.put("/products/{product_id}")
-async def update_product(request: ProductUpdateRequest):
+async def update_product(product_id: str, request: ProductUpdateRequest):
     try:
         handler.update_product(
             project_id=request.project_id,
-            product_id=request.product_id,
+            product_id=product_id,
             details=request.details
         )
-        return {"status": "success", "message": f"Product '{request.product_id}' updated."}
+        return {"status": "success", "message": f"Product '{product_id}' updated."}
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.delete("/products/{product_id}")
-async def delete_product(request: ProductDeleteRequest):
+async def delete_product(product_id: str, project_id: str, languages: List[str]):
     try:
         success = handler.delete_product(
-            project_id=request.project_id,
-            product_id=request.product_id,
-            languages=request.languages
+            project_id=project_id,
+            product_id=product_id,
+            languages=languages
         )
         if success:
-            return {"status": "success", "message": f"Product '{request.product_id}' deleted."}
+            return {"status": "success", "message": f"Product '{product_id}' deleted."}
         return JSONResponse(status_code=400, content={"detail": "Failed to delete product."})
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
@@ -144,15 +148,26 @@ async def ask_question(request: AskQuestionRequest):
         return {"status": "success", "answer": answer}
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
-
-@app.post("/data_taking")
-async def data_taking(request: DataTakingRequest):
+    
+@app.delete("/delete_project")
+async def delete_project(request: DeleteProjectRequest):
     try:
-        handler.data_upload(
-            project_id=request.project,
-            row_data=request.text,
+        handler.delete_project(
+            project_id=request.project_id,
             languages=request.languages
         )
-        return {"status": "success", "message": "Data inserted successfully."}
+        return {"status": "success", "message": f"Project '{request.project_id}' deleted successfully."}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
+@app.post("/data_upload")
+async def data_upload(request: DataUploadRequest):
+    try:
+        handler.data_upload(
+            project_id=request.project_id,
+            row_data=request.row_data,
+            languages=request.languages
+        )
+        return {"status": "success", "message": "Data uploaded successfully."}
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})

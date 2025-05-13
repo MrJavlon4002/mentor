@@ -1,5 +1,5 @@
 import weaviate
-from weaviate.classes.config import Configure, Property, DataType
+from weaviate.classes.config import Configure
 import api_keys
 
 class WeaviateDatabase:
@@ -7,10 +7,10 @@ class WeaviateDatabase:
         self.headers = {"X-VoyageAI-Api-Key": api_keys.VOYAGE_API_KEY}
 
     def _create_client(self):
-        return weaviate.connect_to_local(host="weaviate", port=8080, headers=self.headers)
+        return weaviate.connect_to_local(host="localhost", port=8080, headers=self.headers)
 
     def initialize_and_insert_data(self, row_data, project_id: str):
-        project_id = project_id.lower()
+        project_id = project_id
         with self._create_client() as client:
             client.collections.delete_all()
             print("Existing collections deleted.")
@@ -53,24 +53,34 @@ class WeaviateDatabase:
         else:
             print(f"Collection '{collection_name}' already exists.")
     
-    def delete_collection(self, project_id: str):
-        project_id = project_id.lower()
+    def delete_collection(self, project_id: str, language: str = None):
+        project_id = project_id
         with self._create_client() as client:
             collections = client.collections.list_all()
             if not collections:
                 print("No collections found.")
                 return False
-            for collection in collections:
-                if collection.name == project_id:
-                    client.collections.delete(collection.name)
-                    print(f"Collection '{project_id}' deleted.")
+            
+            if language:
+                collection_name = f"{project_id}_{language}"
+                if client.collections.exists(collection_name):
+                    client.collections.delete(collection_name)
+                    print(f"Collection '{collection_name}' deleted.")
                     return True
-            print(f"Collection '{project_id}' does not exist.")
-            return False
+                print(f"Collection '{collection_name}' does not exist.")
+                return False
+            else:
+                deleted = False
+                for collection in collections:
+                    if collection.name.startswith(f"{project_id}_"):
+                        client.collections.delete(collection.name)
+                        print(f"Collection '{collection.name}' deleted.")
+                        deleted = True
+                return deleted
                 
 
     def check_collection(self, project_id: str):
-        project_id = project_id.lower()
+        project_id = project_id
         with self._create_client() as client:
             collections = client.collections.list_all()
             if not collections:
@@ -86,11 +96,7 @@ class WeaviateDatabase:
 
     def add_product(self, project_id: str, details: dict):
         """Adds a product to the vector database."""
-        name = details['name']
-        description = details['description']
-        price = details['price']
-        id = details['id']
-        project_id = project_id.lower()
+        project_id = project_id
         with self._create_client() as client:
             if not client.collections.exists(project_id):
                 print(f"Collection '{project_id}' does not exist.")
@@ -101,11 +107,10 @@ class WeaviateDatabase:
                 with collection.batch.dynamic() as batch:
                     batch.add_object(
                         properties={
-                            "name": name,
-                            "description": description,
-                            "price": price,
+                            "name": details["name"],
+                            "details": details["details"]
                         },
-                        uuid=id,
+                        uuid=details["id"],
                     )
                 print(f"Product added to collection '{project_id}'.")
                 return True
@@ -117,7 +122,7 @@ class WeaviateDatabase:
     
     def get_product(self, product_id: str, project_id: str):
         """Retrieves a product from the vector database."""
-        collection_name = project_id.lower()
+        collection_name = project_id
         with self._create_client() as client:
             if not client.collections.exists(collection_name):
                 print(f"Collection '{collection_name}' does not exist.")
@@ -159,11 +164,6 @@ class WeaviateDatabase:
     
     def update_product(self, project_id: str, details: dict):
         """Updates a product in the vector database."""
-        name = details['name']
-        description = details['description']
-        price = details['price']
-        id = details['id']
-        project_id = project_id.lower()
 
         with self._create_client() as client:
             if not client.collections.exists(project_id):
@@ -173,25 +173,24 @@ class WeaviateDatabase:
             collection = client.collections.get(project_id)
             try:
                 collection.objects.update(
-                    uuid=id,
+                    uuid=details['id'],
                     properties={
-                        "name": name,
-                        "description": description,
-                        "price": price,
+                        "name": details['name'],
+                        "details": details['details']
                     },
                 )
-                print(f"Product with ID '{id}' updated in collection '{project_id}'.")
+                print(f"Product with ID '{details['id']}' updated in collection '{project_id}'.")
             except Exception as e:
                 print(f"Error updating product: {e}")
                 return False
             finally:
                 client.close()
-                print(f"Product with ID '{id}' not found in collection '{project_id}'.")
+                print(f"Product with ID '{details['id']}' not found in collection '{project_id}'.")
             return True
 
     def delete_product(self, project_id: str, product_id: str):
         """Deletes a product from the vector database."""
-        project_id = project_id.lower()
+        project_id = project_id
         with self._create_client() as client:
             if not client.collections.exists(project_id):
                 print(f"Collection '{project_id}' does not exist.")
@@ -213,7 +212,6 @@ class WeaviateDatabase:
         try:
             client = self._create_client()
             if not client.collections.exists(collection_name):
-                print(client.collections.list_all())
                 print(f"Collection '{collection_name}' not found.")
                 return []
 
@@ -229,10 +227,8 @@ class WeaviateDatabase:
             return [{
                 'text': obj.properties.get('text', ''),
                 'title': obj.properties.get('title', ''),
-                'number': obj.properties.get('number', ''),
                 'name': obj.properties.get('name', ''),
-                'description': obj.properties.get('description', ''),
-                'price': obj.properties.get('price', ''),
+                'details': obj.properties.get('details', ''),
                 'id': obj.uuid,
             } for obj in response.objects]
 

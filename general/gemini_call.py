@@ -1,33 +1,15 @@
 import google.generativeai as genai
 import api_keys
-from langdetect import detect_langs
 
+gemini_model = "gemini-2.0-flash"
 
-
-def language_detection(query: str) -> str:
-    """
-    Detect language of input text and return standardized language code.
-    Returns 'en' for English and similar languages,
-    'ru' for Russian, and 'uz' as default.
-    """
-    lang_list = detect_langs(query)
-
-    for lang in lang_list:
-        lang_str = str(lang).split(':')[0]
-        if lang_str in ['en', 'fi', 'nl']:
-            return 'en'
-        elif lang_str in ['ru', 'uk', 'mk']:
-            return 'ru'
-    return 'uz'
-
-
-def call_gemini_with_functions(messages: str, system_instruction: str)->list[str]:
+def call_llm_with_functions(messages: str, system_instruction: str):
     """
     Call the Gemini API with tools and handle responses or errors gracefully.
     """
     genai.configure(api_key=api_keys.GEMINI_API_KEY)
     model = genai.GenerativeModel(
-        model_name="gemini-2.0-flash",
+        model_name=gemini_model,
         system_instruction=system_instruction
     )
 
