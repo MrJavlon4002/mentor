@@ -48,7 +48,8 @@ while True:
         "project_name": project_id,
         "project_id": project_id,
         "lang": 'uz',
-        "company_data": "Osnova - sizning karyerangiz bo‘yicha ko‘makchingiz."
+        "company_data": "Osnova - sizning karyerangiz bo‘yicha ko‘makchingiz.",
+        "service_type": "support"
     }
     result = DocumentHandler().ask_question(question_details=question_details)
     print(f"{'-'*30} \n{result}\n {'-'*30}")

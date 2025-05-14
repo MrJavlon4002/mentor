@@ -217,7 +217,8 @@ class DocumentHandler:
                 chat_history=question_details["history"],
                 latest_question=question_details["user_question"],
                 project_name=question_details["project_name"],
-                lang=question_details["lang"]
+                lang=question_details["lang"],
+                agent_type = question_details["service_type"]
             )
             q_texts.append(question_details["user_question"])
             context = [
@@ -236,7 +237,8 @@ class DocumentHandler:
                 "project_name": question_details["project_name"],
                 "lang": question_details["lang"],
                 "history": question_details["history"],
-                "company_data": question_details["company_data"]
+                "company_data": question_details["company_data"],
+                "service_type": question_details["service_type"]
             })
 
             return response
