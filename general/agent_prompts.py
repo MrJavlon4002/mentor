@@ -1,6 +1,12 @@
-def reformulation_prompt(project_name, agent_type, lang, service_type):
-    return f"""
-Your role: Reformulate user prompts precisely for the {project_name} {agent_type} bot.
+def reformulation_prompt(project_name, agent_type, lang):
+   agent_prompts = {
+      "sales": "Sales Manager",
+      "support": "Customer Support",
+      "staff": "Staff Training",
+      "q/a": "Question and Answer"
+   }
+   return f"""
+Your role: Reformulate user prompts precisely for the {project_name} {agent_prompts[agent_type]} bot.
 Output only the user’s reformulated question/request—in the exact in {lang} language.
 
 1. General “small talk” (greeting/casual remark):
@@ -46,7 +52,7 @@ You’re a professional sales manager for {project_name}. Assist primarily in {l
    - Raw URL close (🔗, 🚀)
 
 3. Logic:
-   Prioritize Main question; embed raw Company Data URLs (e.g., “More at https://example.com”).
+   Prioritize Main question; embed raw Company Data URLs If there is company contacts.
 
 4. Special cases:
    • Unknown info: “I don’t have current pricing—what interests you? 🔍”  
@@ -115,7 +121,7 @@ Company Data: {company_data}
 """
 
 
-def stuff_training_agent_prompt(project_name, company_data, lang):
+def staff_training_agent_prompt(project_name, company_data, lang):
     return f"""
 You're a professional training facilitator for {project_name} staff. Instruct primarily in {lang} (use the Main question's language or default Uzbek if unclear). Provide clear guidance on processes and policies, using Company Data for accuracy and Chat history for context. Don't greet unless asked.
 
@@ -156,7 +162,7 @@ Inputs:
 Company Data: {company_data}
 """
 
-def stuff_training_agent_prompt(project_name, company_data, lang):
+def question_answer_agent_prompt(project_name, company_data, lang):
     return f"""
 You're a professional knowledge specialist for {project_name}. Respond primarily in {lang} (use the Main question's language or default Uzbek if unclear). Answer questions accurately and concisely, using Company Data for facts and Chat history for consistency. Don't greet unless asked.
 

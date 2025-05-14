@@ -7,18 +7,18 @@ class WeaviateDatabase:
         self.headers = {"X-VoyageAI-Api-Key": api_keys.VOYAGE_API_KEY}
 
     def _create_client(self):
-        return weaviate.connect_to_local(host="localhost", port=8080, headers=self.headers)
+        return weaviate.connect_to_local(host="weaviate", port=8080, headers=self.headers)
 
     def initialize_and_insert_data(self, row_data, project_id: str):
-        project_id = project_id
+        
         with self._create_client() as client:
-            client.collections.delete_all()
+            # client.collections.delete_all()
             print("Existing collections deleted.")
             for lang, chunks in row_data.items():
-                collection_name = f"{project_id}_{lang}"
-                self._ensure_collection_exists(client, collection_name)
+                project_id_lang = f"{project_id}_{lang}"
+                self._ensure_collection_exists(client, project_id_lang)
 
-                collection = client.collections.get(collection_name)
+                collection = client.collections.get(project_id_lang)
 
                 with collection.batch.dynamic() as batch:
                     for idx, chunk_data in enumerate(chunks.values()):
@@ -34,13 +34,13 @@ class WeaviateDatabase:
                             print("Batch import stopped due to excessive errors.")
                             break
 
-                print(f"Inserted data into collection '{collection_name}'.")
+                print(f"Inserted data into collection '{project_id_lang}'.")
 
                 
-    def _ensure_collection_exists(self, client, collection_name):
-        if not client.collections.exists(collection_name):
+    def _ensure_collection_exists(self, client, project_id):
+        if not client.collections.exists(project_id):
             client.collections.create(
-                collection_name,
+                project_id,
                 vectorizer_config=[
                     Configure.NamedVectors.text2vec_voyageai(
                         name="text_vector",
@@ -49,12 +49,12 @@ class WeaviateDatabase:
                     ),
                 ]
             )
-            print(f"Collection '{collection_name}' created with VoyageAI vectorizer.")
+            print(f"Collection '{project_id}' created with VoyageAI vectorizer.")
         else:
-            print(f"Collection '{collection_name}' already exists.")
+            print(f"Collection '{project_id}' already exists.")
     
-    def delete_collection(self, project_id: str, language: str = None):
-        project_id = project_id
+    def delete_project(self, project_id: str, language: str = None):
+        
         with self._create_client() as client:
             collections = client.collections.list_all()
             if not collections:
@@ -62,12 +62,12 @@ class WeaviateDatabase:
                 return False
             
             if language:
-                collection_name = f"{project_id}_{language}"
-                if client.collections.exists(collection_name):
-                    client.collections.delete(collection_name)
-                    print(f"Collection '{collection_name}' deleted.")
+                project_id = f"{project_id}_{language}"
+                if client.collections.exists(project_id):
+                    client.collections.delete(project_id)
+                    print(f"Collection '{project_id}' deleted.")
                     return True
-                print(f"Collection '{collection_name}' does not exist.")
+                print(f"Collection '{project_id}' does not exist.")
                 return False
             else:
                 deleted = False
@@ -80,7 +80,7 @@ class WeaviateDatabase:
                 
 
     def check_collection(self, project_id: str):
-        project_id = project_id
+        
         with self._create_client() as client:
             collections = client.collections.list_all()
             if not collections:
@@ -96,7 +96,7 @@ class WeaviateDatabase:
 
     def add_product(self, project_id: str, details: dict):
         """Adds a product to the vector database."""
-        project_id = project_id
+        
         with self._create_client() as client:
             if not client.collections.exists(project_id):
                 print(f"Collection '{project_id}' does not exist.")
@@ -120,21 +120,21 @@ class WeaviateDatabase:
             finally:
                 client.close()
     
-    def get_product(self, product_id: str, project_id: str):
+    def get_product(self, project_id: str, product_id: str, ):
         """Retrieves a product from the vector database."""
-        collection_name = project_id
+        
         with self._create_client() as client:
-            if not client.collections.exists(collection_name):
-                print(f"Collection '{collection_name}' does not exist.")
+            if not client.collections.exists(project_id):
+                print(f"Collection '{project_id}' does not exist.")
                 return None
 
-            collection = client.collections.get(collection_name)
+            collection = client.collections.get(project_id)
             try:
                 response = collection.query.fetch_object_by_id(product_id)
                 if response:
                     return response.properties
                 else:
-                    print(f"Product with ID '{product_id}' not found in collection '{collection_name}'.")
+                    print(f"Product with ID '{product_id}' not found in collection '{project_id}'.")
                     return None
             except Exception as e:
                 print(f"Error retrieving product: {e}")
@@ -142,14 +142,14 @@ class WeaviateDatabase:
             finally:
                 client.close()
 
-    def get_all_product(self, collection_name: str):
+    def get_all_product(self, project_id: str):
         """Retrieves a product from the vector database."""
         with self._create_client() as client:
-            if not client.collections.exists(collection_name):
-                print(f"Collection '{collection_name}' does not exist.")
+            if not client.collections.exists(project_id):
+                print(f"Collection '{project_id}' does not exist.")
                 return None
 
-            collection = client.collections.get(collection_name)
+            collection = client.collections.get(project_id)
             try:
                 all_products = []
                 for item in collection.iterator():
@@ -172,7 +172,7 @@ class WeaviateDatabase:
 
             collection = client.collections.get(project_id)
             try:
-                collection.objects.update(
+                collection.data.update(
                     uuid=details['id'],
                     properties={
                         "name": details['name'],
@@ -180,17 +180,16 @@ class WeaviateDatabase:
                     },
                 )
                 print(f"Product with ID '{details['id']}' updated in collection '{project_id}'.")
+                return True
             except Exception as e:
                 print(f"Error updating product: {e}")
                 return False
             finally:
                 client.close()
-                print(f"Product with ID '{details['id']}' not found in collection '{project_id}'.")
-            return True
 
     def delete_product(self, project_id: str, product_id: str):
         """Deletes a product from the vector database."""
-        project_id = project_id
+        
         with self._create_client() as client:
             if not client.collections.exists(project_id):
                 print(f"Collection '{project_id}' does not exist.")
@@ -207,15 +206,15 @@ class WeaviateDatabase:
                 client.close()
 
 
-    def hybrid_query(self, query: str, collection_name, limit=3):
+    def hybrid_query(self, query: str, project_id, limit=3):
         client = None
         try:
             client = self._create_client()
-            if not client.collections.exists(collection_name):
-                print(f"Collection '{collection_name}' not found.")
+            if not client.collections.exists(project_id):
+                print(f"Collection '{project_id}' not found.")
                 return []
 
-            collection = client.collections.get(collection_name)
+            collection = client.collections.get(project_id)
             if isinstance(query, list): 
                 query = ' '.join(query)
 

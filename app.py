@@ -54,6 +54,7 @@ class AskQuestionRequest(BaseModel):
     history: Optional[List[str]] = []
     lang: str
     company_data: Optional[str] = ""
+    service_type: str
 
 class DeleteProjectRequest(BaseModel):
     project_id: str
@@ -142,7 +143,8 @@ async def ask_question(request: AskQuestionRequest):
             "history": request.history,
             "user_question": request.user_question,
             "lang": request.lang,
-            "company_data": request.company_data
+            "company_data": request.company_data,
+            "service_type": request.service_type
         }
         answer = handler.ask_question(question_details=question_details)
         return {"status": "success", "answer": answer}

@@ -140,9 +140,11 @@ Ask a question about project-specific content with history.
   "user_question": "What is this product about?",
   "lang": "en",
   "history": [],
-  "company_data": "..."
+  "company_data": "...",
+  "service_type": "",
 }
 ```
+service_types => 'sales' / 'support' / 'staff' / 'q/a'
 
 ---
 

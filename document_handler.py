@@ -106,6 +106,18 @@ class DocumentHandler:
                 self.logger.warning(f"Error getting product in {lang}: {e}")
 
         return products if products else "Product not found"
+    
+    def get_all_products(self, project_id: str, languages: List[str]) -> Union[Dict[str, Any], str]:
+        products = {}
+        for lang in languages:
+            try:
+                product = self.client.get_all_product(project_id= f"{project_id}_{lang}")
+                if product:
+                    products[lang] = product
+            except Exception as e:
+                self.logger.warning(f"Error getting product in {lang}: {e}")
+
+        return products if products else "Products not found"
 
     def update_product(self, project_id: str, details: Dict[str, Any], lang: str) -> None:
         """
@@ -189,7 +201,7 @@ class DocumentHandler:
 
     def query_core_data(self, project_id: str, query: str, lang: str) -> Union[List[Dict[str, Any]], str]:
         try:
-            results = self.client.hybrid_query(query=query, collection_name=f"{project_id}_{lang}")
+            results = self.client.hybrid_query(query=query, project_id=f"{project_id}_{lang}")
             return results if results else "No relevant data found."
         except Exception as e:
             self.logger.error(f"Query error: {e}")
@@ -199,7 +211,7 @@ class DocumentHandler:
         success = True
         for lang in languages:
             try:
-                self.client.delete_collection(project_id=project_id, language=lang)
+                self.client.delete_project(project_id=project_id, language=lang)
             except Exception as e:
                 self.logger.error(f"Project delete failed for {lang}: {e}")
                 success = False

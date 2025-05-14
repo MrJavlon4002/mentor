@@ -3,7 +3,7 @@ from document_handler import DocumentHandler
 handler = DocumentHandler()
 import uuid
 languages=['ru', 'uz']
-project_id = 'osnova'
+project_id = 'osnova123'
 data = """
 Osnova - sizning karyerangiz bo‘yicha ko‘makchingiz. Biz sizga kasb tanlashda yordam beramiz, zamonaviy bilim va ko‘nikmalar beramiz, yetakchi kompaniyalar bilan tanishtirамiz hamda professional jamiyatning a’zosiga aylantiramiz. Biz yangi kasblarga o‘rgatamiz, ko‘nikmalarni rivojlantiramiz, o‘z yo‘lingizni tanlashga va zamonaviy karyera qurishga ko‘maklashamiz.
 """
