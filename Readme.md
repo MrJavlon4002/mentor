@@ -66,7 +66,7 @@ Create a multilingual product from a base language.
 ```json
 {
   "details": { "id": "123", "name": "Test", "details": { "desc": "Example" }, "languages": ["en", "ru"] },
-  "project_id": "osnova",
+  "project_id": "example",
   "lang": "en"
 }
 ```
@@ -103,7 +103,7 @@ Update a product in all its languages.
 
 ```json
 {
-  "project_id": "osnova",
+  "project_id": "example",
   "product_id": "123",
   "details": {
     "id": "123",
@@ -135,8 +135,8 @@ Ask a question about project-specific content with history.
 
 ```json
 {
-  "project_id": "osnova",
-  "project_name": "Osnova Q&A",
+  "project_id": "example",
+  "project_name": "example Q&A",
   "user_question": "What is this product about?",
   "lang": "en",
   "history": [],
@@ -156,7 +156,7 @@ Deletes all product data associated with a project.
 
 ```json
 {
-  "project_id": "osnova",
+  "project_id": "example",
   "languages": ["en", "ru"]
 }
 ```
@@ -171,7 +171,7 @@ Used for uploading structured row data into a project.
 
 ```json
 {
-  "project_id": "osnova",
+  "project_id": "example",
   "row_data": "Some tabular data here",
   "languages": ["en", "ru"]
 }
