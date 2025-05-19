@@ -12,7 +12,7 @@ class WeaviateDatabase:
     def initialize_and_insert_data(self, row_data, project_id: str):
         
         with self._create_client() as client:
-            # client.collections.delete_all()
+            client.collections.delete_all()
             print("Existing collections deleted.")
             for lang, chunks in row_data.items():
                 project_id_lang = f"{project_id}_{lang}"
@@ -22,6 +22,7 @@ class WeaviateDatabase:
 
                 with collection.batch.dynamic() as batch:
                     for idx, chunk_data in enumerate(chunks.values()):
+                        
                         batch.add_object(
                             properties={
                                 "title": chunk_data["title"],
