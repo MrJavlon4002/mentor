@@ -1,8 +1,8 @@
 language = {
-      "uz": "Uzbek Language",
-      "ru": "Russian language",
-      "en": "English language",
-   }
+   "uz": "Uzbek Language",
+   "ru": "Russian language",
+   "en": "English language",
+}
 
 def reformulation_prompt(project_name, agent_type, lang):
    agent_prompts = {
