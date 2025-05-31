@@ -258,3 +258,13 @@ class DocumentHandler:
         except Exception as e:
             self.logger.error(f"QA failed: {e}")
             return {"error": str(e), "processing_time": time.time() - start}
+
+
+    def delete_all(self) -> bool:
+        try:
+            self.client.delete_all_collections()
+            self.logger.info("All data deleted successfully.")
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to delete all data: {e}")
+            return False

@@ -173,3 +173,12 @@ async def data_upload(request: DataUploadRequest):
         return {"status": "success", "message": "Data uploaded successfully."}
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
+    
+
+@app.post("/delete_all")
+async def delete_all():
+    try:
+        handler.delete_all()
+        return {"status": "success", "message": "All data deleted successfully."}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})

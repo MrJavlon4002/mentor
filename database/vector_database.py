@@ -9,10 +9,13 @@ class WeaviateDatabase:
     def _create_client(self):
         return weaviate.connect_to_local(host="weaviate", port=8080, headers=self.headers)
 
+    def delete_all_collections(self):
+        with self._create_client() as client:
+            client.collections.delete_all()
+
     def initialize_and_insert_data(self, row_data, project_id: str):
         
         with self._create_client() as client:
-            # client.collections.delete_all()
             # print("Existing collections deleted.")
             for lang, chunks in row_data.items():
                 project_id_lang = f"{project_id}_{lang}"
