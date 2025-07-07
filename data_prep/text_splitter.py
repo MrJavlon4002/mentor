@@ -17,44 +17,49 @@ def split_text(text, chunk_size=1000, overlap_sentences=1, separators=['\n\n', '
     paragraphs = text.split('\n\n')
 
     for paragraph in paragraphs:
+        paragraph = paragraph.strip()
+        if not paragraph:
+            continue
+
         if len(paragraph) <= chunk_size:
             chunks.append(paragraph)
-        else:
-            sentences = []
-            temp_text = paragraph
-            while temp_text:
-                best_split = -1
-                for separator in separators:
-                    if separator == "":
-                        break
+            continue
 
-                    split_index = temp_text.find(separator)
-                    if split_index > best_split:
-                        best_split = split_index
-                        best_separator = separator
+        sentences = []
+        start = 0
+        text_len = len(paragraph)
+        while start < text_len:
+            split_idx = -1
+            split_sep = None
+            for sep in separators:
+                idx = paragraph.find(sep, start)
+                if idx != -1 and (split_idx == -1 or idx < split_idx):
+                    split_idx = idx
+                    split_sep = sep
+            if split_idx == -1:
+                sentences.append(paragraph[start:])
+                break
+            end = split_idx + len(split_sep)
+            sentences.append(paragraph[start:end])
+            start = end
 
-                if best_split == -1 or best_separator == "":
-                    sentences.append(temp_text)
-                    break
-                else:
-                    sentence = temp_text[:best_split + len(best_separator)]
-                    sentences.append(sentence)
-                    temp_text = temp_text[best_split + len(best_separator):]
+        i = 0
+        while i < len(sentences):
+            chunk = []
+            total_len = 0
+            j = i
+            while j < len(sentences) and total_len + len(sentences[j]) <= chunk_size:
+                chunk.append(sentences[j])
+                total_len += len(sentences[j])
+                j += 1
 
-            current_chunk = []
-            current_length = 0
-            for i, sentence in enumerate(sentences):
-                if current_length + len(sentence) <= chunk_size:
-                    current_chunk.append(sentence)
-                    current_length += len(sentence)
-                else:
-                    if current_chunk:
-                        chunks.append("".join(current_chunk))
-                    
-                    current_chunk = sentences[max(0, i - overlap_sentences):i + 1]
-                    current_length = sum(len(s) for s in current_chunk)
+            if chunk:
+                chunks.append(''.join(chunk))
 
-            if current_chunk:
-                chunks.append("".join(current_chunk))
+            if j == i:
+                chunks.append(sentences[j])
+                j += 1
+
+            i = max(j - overlap_sentences, i + 1)
 
     return chunks

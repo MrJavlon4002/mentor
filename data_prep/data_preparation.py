@@ -1,4 +1,3 @@
-from data_prep.tahrirchi import preprocess_text
 from data_prep.text_splitter import split_text
 import json
 # from langdetect import detect_langs
@@ -10,24 +9,8 @@ language = {
    "en": "English language",
 }
 
-# def language_detection(query: str) -> str:
-#     """
-#     Detect language of input text and return standardized language code.
-#     Returns 'en' for English and similar languages,
-#     'ru' for Russian, and 'uz' as default.
-#     """
-#     lang_list = detect_langs(query)
-#     for lang in lang_list:
-#         lang_str = str(lang).split(':')[0]
-#         if lang_str in ['en', 'fi', 'nl']:
-#             return 'en'
-#         elif lang_str in ['ru', 'uk', 'mk']:
-#             return 'ru'
-#     return 'uz'
-
 def prepare_data(text, languages=['uz', 'ru']):
-    formatted_data = preprocess_text(text)
-    splitted_data = split_text(formatted_data, 2000, 10)
+    splitted_data = split_text(text, 2000, 10)
     
     # System prompt for titling
     def get_sys_prompt(lang):
