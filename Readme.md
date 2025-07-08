@@ -1,11 +1,6 @@
-Here is a complete `README.md` for your FastAPI project, including setup instructions and documentation for all available endpoints:
+# 🧠 Mentour Product & Knowledge API
 
----
-
-````markdown
-# 🧠 IZI-NLP Product & Knowledge API
-
-A FastAPI-based multilingual product and Q&A platform. This API allows you to create, update, retrieve, delete products across multiple languages, as well as ask questions using contextual project data.
+A FastAPI-based multilingual product and Q&A platform. This API enables CRUD operations on multilingual products and contextual Q&A functionality for structured project data.
 
 ---
 
@@ -14,198 +9,131 @@ A FastAPI-based multilingual product and Q&A platform. This API allows you to cr
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/izi-nlp.git
-cd izi-nlp
-````
-
-### 2. Install dependencies
-
-```bash
+git clone https://github.com/your-username/mentor.git
+cd mentor
+2. Install dependencies
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-```
+3. Run the app
+uvicorn app:app --reload
+🛡️ Security
 
-### 3. Run the app
+By default, the IP whitelist middleware is disabled. To enable:
+Uncomment the line in your app startup:
 
-```bash
-uvicorn main:app --reload
-```
-
----
-
-## 🛡️ Security
-
-> By default, the IP whitelist middleware is **disabled**. To enable:
-
-Uncomment:
-
-```python
 # app.add_middleware(IPWhitelistMiddleware)
-```
+Then add allowed IPs to the ALLOWED_IPS set.
 
-Add allowed IPs to the `ALLOWED_IPS` set.
+📚 API Documentation
 
----
+Once running, access Swagger UI at:
 
-## 📚 API Documentation
+http://127.0.0.1:8000/docs
+📦 Endpoints
 
-> Once running, access **Swagger UI** at:
-> [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+🔹 POST /products — Create Product
+Create a multilingual product for a project.
 
----
+Request body:
 
-## 📦 Endpoints
-
-### 🔹 `POST /products` — Create Product
-
-Create a multilingual product from a base language.
-
-**Request body:**
-
-```json
 {
-  "details": { "id": "123", "name": "Test", "details": { "desc": "Example" }, "languages": ["en", "ru"] },
+  "details": { "id": "123", "name": "Test", "details": { "desc": "Example" } },
   "project_id": "example",
   "lang": "en"
 }
-```
+🔹 GET /products/{product_id} — Get Product Details
+Retrieve a product across specified languages.
 
----
+Query params:
 
-### 🔹 `GET /products/{product_id}` — Get Product
+project_id: string
+languages: comma-separated list of language codes (e.g. en,ru)
+🔹 GET /products — List All Products
+List all products of a project across multiple languages.
 
-Fetch a product in all specified languages.
+Query params:
 
-**Query params:**
+project_id: string
+languages: comma-separated list
+🔹 PUT /products/{product_id} — Update Product
+Update product details across all languages.
 
-* `project_id`: string
-* `languages`: list of language codes (e.g. `en,ru`)
+Request body:
 
----
-
-### 🔹 `GET /products` — Get All Products
-
-List all products for a project in multiple languages.
-
-**Query params:**
-
-* `project_id`: string
-* `languages`: list of language codes
-
----
-
-### 🔹 `PUT /products/{product_id}` — Update Product
-
-Update a product in all its languages.
-
-**Request body:**
-
-```json
 {
   "project_id": "example",
   "product_id": "123",
   "details": {
     "id": "123",
     "name": "Updated Name",
-    "details": { "desc": "Updated description" },
-    "languages": ["en", "ru"]
+    "details": { "desc": "New description" }
   }
 }
-```
+🔹 DELETE /products/{product_id} — Delete Product
+Remove a product in specified languages.
 
----
+Query params:
 
-### 🔹 `DELETE /products/{product_id}` — Delete Product
+project_id: string
+languages: comma-separated list
+🔹 POST /ask_question — Ask Contextual Question
+Ask questions using project context, history, and service type.
 
-Delete a product across multiple languages.
+Request body:
 
-**Query params:**
-
-* `project_id`: string
-* `languages`: list of language codes
-
----
-
-### 🔹 `POST /ask_question` — Ask Question
-
-Ask a question about project-specific content with history.
-
-**Request body:**
-
-```json
 {
   "project_id": "example",
-  "project_name": "example Q&A",
+  "project_name": "Example Project",
   "user_question": "What is this product about?",
-  "lang": "en",
   "history": [],
-  "company_data": "...",
-  "service_type": "",
+  "lang": "en",
+  "company_data": "Additional context …",
+  "service_type": "support"
 }
-```
-service_types => 'sales' / 'support' / 'staff' / 'q/a'
+📌 service_type must be one of:
+sales / support / staff / q/a
 
----
+🔹 DELETE /delete_project — Delete Entire Project
+Delete all data tied to a project.
 
-### 🔹 `DELETE /delete_project` — Delete Entire Project
+Request body:
 
-Deletes all product data associated with a project.
-
-**Request body:**
-
-```json
 {
   "project_id": "example",
-  "languages": ["en", "ru"]
+  "languages": ["en","ru"]
 }
-```
+🔹 POST /data_upload — Upload Raw Data
+Upload raw or tabular project data for indexing.
 
----
+Request body:
 
-### 🔹 `POST /data_upload` — Upload Raw Data
-
-Used for uploading structured row data into a project.
-
-**Request body:**
-
-```json
 {
   "project_id": "example",
   "row_data": "Some tabular data here",
-  "languages": ["en", "ru"]
+  "languages": ["en","ru"]
 }
-```
+🔹 POST /delete_all — Clear Entire Database
+Wipe all stored data across every project and language.
 
----
+🧠 Notes
 
-## 🧠 Notes
+Question answering and translations use an LLM via call_llm_with_functions.
+Data is stored per-language under keys like project_id_<lang> in the vector store.
+📂 Project Structure
 
-* Translations are powered by an LLM (via `call_llm_with_functions`)
-* Product content is always stored per-language: `project_id_<lang>`
-
----
-
-## 📂 Project Structure
-
-```
 .
-├── main.py               # FastAPI app
-├── document_handler.py   # Product and QA logic
-├── requirements.txt
-└── README.md             # ← you are here
-```
+├── app.py                 # FastAPI application  
+├── document_handler.py   # Core product & QA business logic  
+├── data_prep/            # Data preparation utilities  
+├── database/             # Vector database integrations  
+├── general/              # LLM helper utilities  
+├── Dockerfile  
+├── docker-compose.yml  
+├── nginx.conf  
+├── requirements.txt  
+└── README.md             # ← you’re here  
+📫 Contact
 
----
-
-## 📫 Contact
-
-For support or collaboration, reach out at:
-`valiyevjavlon001@gmail.com`
-
----
-
-```
-
-Let me know if you want to include `example curl` commands or add authentication support.
-```
+Need help or want to collaborate? Reach me at:
+valiyevjavlon001@gmail.com
