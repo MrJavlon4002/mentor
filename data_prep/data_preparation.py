@@ -30,12 +30,12 @@ def prepare_data(text, languages=['uz', 'ru']):
         for i, chunk_text in enumerate(splitted_data):
             
             response = call_llm_with_functions(chunk_text, get_sys_prompt(lang))
-            cleaned_response = response.strip().replace('```json', '').replace('```', '').replace('\n', '')
-            json_data = json.loads(cleaned_response)
+            # # cleaned_response = response.strip().replace('```json', '').replace('```', '').replace('\n', '')
+            # json_data = json.loads(cleaned_response)
             
             data[lang][f"chunk_{i}"] = {
-                'title': json_data['title'],
-                'text': json_data['text']
+                'title': "chunk_" + str(i),
+                'text': chunk_text
             }
 
     return data

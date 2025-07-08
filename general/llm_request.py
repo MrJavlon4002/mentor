@@ -1,5 +1,6 @@
 from general.gemini_call import call_llm_with_functions
 import general.agent_prompts as prompts
+import json
 
 
 def contextualize_question(latest_question, chat_history, project_name=str, agent_type = str, lang=str) -> list:
@@ -45,9 +46,12 @@ def answer_question(question_details: dict) -> str:
 
    messages = f'*Company Data*: {question_details["context"]}\n*Documentary questions*: {question_details["reformulations"]}, *Main question*: {question_details["user_question"]}, *Chat history*: {chat_history}.'
    
-   result = call_llm_with_functions(
+   response = call_llm_with_functions(
        messages=messages,
        system_instruction=system_instruction
    )
 
-   return result
+   cleaned_response = response.strip().replace('```json', '').replace('```', '').replace('\n', '')
+   json_data = json.loads(cleaned_response)
+
+   return json_data

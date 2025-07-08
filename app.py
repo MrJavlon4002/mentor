@@ -1,25 +1,11 @@
-from fastapi import FastAPI, Request
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import FastAPI
 from starlette.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 from document_handler import DocumentHandler
-
-ALLOWED_IPS = {"127.0.0.1", "192.168.1.10", "172.19.0.1"}
-
-class IPWhitelistMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        client_ip = request.client.host
-        print(f"Client IP: {client_ip}")
-        if client_ip not in ALLOWED_IPS:
-            return JSONResponse(
-                status_code=403,
-                content={"detail": "Forbidden: IP not allowed"}
-            )
-        return await call_next(request)
+from enum import Enum
 
 app = FastAPI()
-# app.add_middleware(IPWhitelistMiddleware)
 
 handler = DocumentHandler()
 
@@ -47,6 +33,12 @@ class ProductDeleteRequest(BaseModel):
     product_id: str
     languages: List[str]
 
+class ServiceType(str, Enum):
+    sales = 'sales'
+    support = 'support'
+    staff = 'staff'
+    qa = 'q/a'
+
 class AskQuestionRequest(BaseModel):
     project_id: str
     project_name: str
@@ -54,7 +46,7 @@ class AskQuestionRequest(BaseModel):
     history: Optional[List[str]] = []
     lang: str
     company_data: Optional[str] = ""
-    service_type: str
+    service_type: ServiceType
 
 class DeleteProjectRequest(BaseModel):
     project_id: str

@@ -1,11 +1,9 @@
-import time
-import json
 import logging
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, Any, List, Optional, Union
+import time
 
-from database.vector_database import WeaviateDatabase
-from general.openai_call import call_llm_with_functions
 from general.llm_request import contextualize_question, answer_question
+from database.vector_database import WeaviateDatabase
 from data_prep.data_preparation import prepare_data
 
 class DocumentHandler:
@@ -22,184 +20,81 @@ class DocumentHandler:
         return logger
 
     def data_upload(self, project_id: str, row_data: str, languages: List[str]) -> None:
+        """Upload and insert data into a language-specific collection."""
         try:
             processed_data = prepare_data(row_data, languages)
             self.client.initialize_and_insert_data(processed_data, project_id=project_id)
-            self.logger.info(f"Data inserted for project {project_id}")
+            for lang in languages:
+                self.logger.info(f"Data inserted for project {project_id}_{lang}")
         except Exception as e:
             self.logger.error(f"Upload failed: {e}")
             raise
 
     def create_product(self, details: Dict[str, Any], project_id: str, lang: str) -> Dict[str, Any]:
         """
-        Translates product 'name' and all fields in 'details' from source lang to each target lang.
-        Preserves 'id' and 'languages'.
+        Adds product data for a single language.
         """
-        if 'details' not in details or 'languages' not in details:
-            raise ValueError("Missing 'details' or 'languages' in product details")
+        if 'details' not in details:
+            raise ValueError("Missing 'details' in product details")
 
-        translated_data = {lang: details.copy()}
-        base_lang = lang
+        product = {
+            "name": details["name"],
+            "details": details["details"],
+            "id": details["id"],
+        }
+        try:
+            self.client.add_product(f"{project_id}_{lang}", product)
+            self.logger.info(f"Product created for {project_id}_{lang}")
+        except Exception as e:
+            self.logger.error(f"Product insert failed for {project_id}_{lang}: {e}")
+        return product
 
-        sys_prompt = """
-    You are a professional translator.
-    Translate the following product information from {source_lang} to {target_lang}.
+    def get_product(self, project_id: str, product_id: str, lang: str) -> Union[Dict[str, Any], str]:
+        """Get a single product from one language-specific collection."""
+        try:
+            product = self.client.get_product(project_id=f"{project_id}_{lang}", product_id=product_id)
+            if product:
+                return product
+        except Exception as e:
+            self.logger.warning(f"Error getting product in {lang}: {e}")
 
-    Product JSON:
-    {product_json}
-
-    Only translate values. Preserve all keys and structure.
-    Return only valid JSON with translated values.
-    """
-
-        for target_lang in details['languages']:
-            if target_lang == base_lang:
-                continue
-
-            try:
-                translatable_payload = {
-                    "name": details["name"],
-                    "details": details["details"]
-                }
-
-                prompt = sys_prompt.format(
-                    source_lang=base_lang,
-                    target_lang=target_lang,
-                    product_json=json.dumps(translatable_payload, ensure_ascii=False, indent=2)
-                )
-
-                response = call_llm_with_functions(
-                    messages=f"{details}",
-                    system_instruction=prompt
-                )
-
-                parsed = json.loads(response)
-                translated = {
-                    "name": parsed["name"],
-                    "details": parsed["details"],
-                    "id": details["id"],
-                    "languages": details["languages"],
-                }
-
-                translated_data[target_lang] = translated
-                self.logger.info(f"Product created for {target_lang}")
-
-
-            except Exception as e:
-                self.logger.error(f"Translation failed for {target_lang}: {e}")
-            
-            for lang in translated_data.keys():
-                self.client.add_product(f"{project_id}_{lang}", translated_data[lang])
-
-        return translated_data
-
-
-
-    def get_product(self, project_id: str, product_id: str, languages: List[str]) -> Union[Dict[str, Any], str]:
-        products = {}
-        for lang in languages:
-            try:
-                product = self.client.get_product(project_id= f"{project_id}_{lang}", product_id= product_id)
-                if product:
-                    products[lang] = product
-            except Exception as e:
-                self.logger.warning(f"Error getting product in {lang}: {e}")
-
-        return products if products else "Product not found"
+        return "Product not found"
     
-    def get_all_products(self, project_id: str, languages: List[str]) -> Union[Dict[str, Any], str]:
-        products = {}
-        for lang in languages:
-            try:
-                product = self.client.get_all_product(project_id= f"{project_id}_{lang}")
-                if product:
-                    products[lang] = product
-            except Exception as e:
-                self.logger.warning(f"Error getting product in {lang}: {e}")
+    def get_all_products(self, project_id: str, lang: str) -> Union[Any, str]:
+        """Get all products for one language-specific collection."""
+        try:
+            product_list = self.client.get_all_product(project_id=f"{project_id}_{lang}")
+            if product_list:
+                return product_list
+        except Exception as e:
+            self.logger.warning(f"Error getting products in {lang}: {e}")
 
-        return products if products else "Products not found"
+        return "Products not found"
 
     def update_product(self, project_id: str, details: Dict[str, Any], lang: str) -> None:
         """
-        Updates a product in all specified languages.
-        Translates 'name' and 'details' values. Preserves 'id' and 'languages'.
+        Updates a product for a single language.
         """
-        if 'languages' not in details or not details['languages']:
-            raise ValueError("No 'languages' specified")
-    
-        base_lang = lang
-    
-        sys_prompt = """
-        You are a professional translator.
-        Translate the following product information from {source_lang} to {target_lang}.
-    
-        Product JSON:
-        {product_json}
-    
-        Only translate values. Preserve all keys and structure.
-        Return only valid JSON with translated values.
-        """
-    
-        # Start with the original data
-        translated_data = {base_lang: details.copy()}
-    
-        for target_lang in details['languages']:
-            if target_lang == base_lang:
-                continue
-            
-            try:
-                translatable_payload = {
-                    "name": details["name"],
-                    "details": details["details"]
-                }
-    
-                prompt = sys_prompt.format(
-                    source_lang=base_lang,
-                    target_lang=target_lang,
-                    product_json=json.dumps(translatable_payload, ensure_ascii=False, indent=2)
-                )
-    
-                response = call_llm_with_functions(
-                    messages=f"{details}",
-                    system_instruction=prompt
-                )
-    
-                parsed = json.loads(response)
-    
-                translated = {
-                    "name": parsed["name"],
-                    "details": parsed["details"],
-                    "id": details["id"],
-                    "languages": details["languages"],
-                }
-    
-                translated_data[target_lang] = translated
-                self.logger.info(f"Prepared updated product for {target_lang}")
-    
-            except Exception as e:
-                self.logger.error(f"Translation failed for {target_lang}: {e}")
-    
-        # Finally update all products in DB
-        for lang_code, translated in translated_data.items():
-            try:
-                self.client.update_product(project_id=f"{project_id}_{lang_code}", details=translated)
-                self.logger.info(f"Product updated for {lang_code}")
-            except Exception as e:
-                self.logger.error(f"Update failed for {lang_code}: {e}")
+        updated = {
+            "name": details["name"],
+            "details": details["details"],
+            "id": details["id"],
+        }
+        try:
+            self.client.update_product(project_id=f"{project_id}_{lang}", details=updated)
+            self.logger.info(f"Product updated for {project_id}_{lang}")
+        except Exception as e:
+            self.logger.error(f"Update failed for {project_id}_{lang}: {e}")
 
+    def delete_product(self, project_id: str, product_id: str, lang: str) -> bool:
+        try:
+            self.client.delete_product(f"{project_id}_{lang}", product_id)
+            return True
+        except Exception as e:
+            self.logger.error(f"Delete failed for {project_id}_{lang}: {e}")
+            return False
 
-
-    def delete_product(self, project_id: str, product_id: str, languages: List[str]) -> bool:
-        success = True
-        for lang in languages:
-            try:
-                self.client.delete_product(f"{project_id}_{lang}", product_id)
-            except Exception as e:
-                self.logger.error(f"Delete failed for {lang}: {e}")
-                success = False
-        return success
-
-    def query_core_data(self, project_id: str, query: str, lang: str) -> Union[List[Dict[str, Any]], str]:
+    def query_core_data(self, project_id: str, query: str, lang: str) -> Union[Any, str]:
         try:
             results = self.client.hybrid_query(query=query, project_id=f"{project_id}_{lang}")
             return results if results else "No relevant data found."
@@ -207,15 +102,22 @@ class DocumentHandler:
             self.logger.error(f"Query error: {e}")
             return "Query failed"
 
-    def delete_project(self, project_id: str, languages: List[str]) -> bool:
-        success = True
-        for lang in languages:
-            try:
-                self.client.delete_project(project_id=project_id, language=lang)
-            except Exception as e:
-                self.logger.error(f"Project delete failed for {lang}: {e}")
-                success = False
-        return success
+    def delete_project(self, project_id: str, lang: str) -> bool:
+        try:
+            self.client.delete_project(project_id=project_id, language=lang)
+            return True
+        except Exception as e:
+            self.logger.error(f"Project delete failed for {project_id}_{lang}: {e}")
+            return False
+
+    def delete_all(self) -> bool:
+        try:
+            self.client.delete_all_collections()
+            self.logger.info("All data deleted successfully.")
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to delete all data: {e}")
+            return False
 
     def ask_question(self, question_details: Dict[str, Any]) -> Dict[str, Any]:
         start = time.time()
@@ -230,7 +132,7 @@ class DocumentHandler:
                 latest_question=question_details["user_question"],
                 project_name=question_details["project_name"],
                 lang=question_details["lang"],
-                agent_type = question_details["service_type"]
+                agent_type=question_details["service_type"]
             )
             q_texts.append(question_details["user_question"])
             context = [
@@ -258,13 +160,3 @@ class DocumentHandler:
         except Exception as e:
             self.logger.error(f"QA failed: {e}")
             return {"error": str(e), "processing_time": time.time() - start}
-
-
-    def delete_all(self) -> bool:
-        try:
-            self.client.delete_all_collections()
-            self.logger.info("All data deleted successfully.")
-            return True
-        except Exception as e:
-            self.logger.error(f"Failed to delete all data: {e}")
-            return False
