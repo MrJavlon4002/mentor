@@ -19,10 +19,10 @@ class DocumentHandler:
         logger.addHandler(handler)
         return logger
 
-    async def data_upload(self, project_id: str, row_data: str, languages: List[str]) -> None:
+    def data_upload(self, project_id: str, row_data: str, languages: List[str]) -> None:
         """Upload and insert data into a language-specific collection."""
         try:
-            processed_data = await prepare_data(row_data, languages)
+            processed_data = prepare_data(row_data, languages)
             self.client.initialize_and_insert_data(processed_data, project_id=project_id)
             for lang in languages:
                 self.logger.info(f"Data inserted for project {project_id}_{lang}")

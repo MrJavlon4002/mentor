@@ -2,6 +2,7 @@ from data_prep.text_splitter import split_text
 import json
 # from langdetect import detect_langs
 from general.openai_call import call_llm_with_functions
+from general.gemini_call import call_llm_with_functions
 
 language = {
    "uz": "Uzbek Language",
