@@ -4,63 +4,113 @@ A FastAPI-based multilingual product and Q&A platform. This API enables CRUD ope
 
 ---
 
+
+
+## 🔒 Authentication
+
+This API uses a token-based authentication middleware to secure most endpoints. The `/ask_question` endpoint is currently exempt from this authentication.
+
+To authenticate your requests, include a `Bearer` token in the `Authorization` header of your HTTP requests. The expected token is `Bearer mysecrettoken`.
+
+### Example:
+
+```
+Authorization: Bearer mysecrettoken
+```
+
+If the token is missing or invalid, the API will return a `401 Unauthorized` response.
+
+---
+
+
+
 ## 🚀 Getting Started
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/mentor.git
+git clone https://github.com/MrJavlon4002/mentor.git
 cd mentor
-2. Install dependencies
+```
+
+### 2. Install dependencies
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-3. Run the app
+```
+
+### 3. Run the app
+
+```bash
 uvicorn app:app --reload
-🛡️ Security
+```
 
-By default, the IP whitelist middleware is disabled. To enable:
-Uncomment the line in your app startup:
+---
 
-# app.add_middleware(IPWhitelistMiddleware)
-Then add allowed IPs to the ALLOWED_IPS set.
 
-📚 API Documentation
+
+## 📚 API Documentation
 
 Once running, access Swagger UI at:
 
-http://127.0.0.1:8000/docs
-📦 Endpoints
+`http://127.0.0.1:8000/docs`
 
-🔹 POST /products — Create Product
-Create a multilingual product for a project.
+## 📦 Endpoints
 
-Request body:
 
+
+
+### 🔹 POST /products — Create Product
+
+Create a multilingual product for a project. This endpoint requires authentication.
+
+**Request Body:**
+
+```json
 {
   "details": { "id": "123", "name": "Test", "details": { "desc": "Example" } },
   "project_id": "example",
   "lang": "en"
 }
-🔹 GET /products/{product_id} — Get Product Details
-Retrieve a product across specified languages.
+```
 
-Query params:
 
-project_id: string
-languages: comma-separated list of language codes (e.g. en,ru)
-🔹 GET /products — List All Products
-List all products of a project across multiple languages.
 
-Query params:
 
-project_id: string
-languages: comma-separated list
-🔹 PUT /products/{product_id} — Update Product
-Update product details across all languages.
+### 🔹 GET /products/{product_id} — Get Product Details
 
-Request body:
+Retrieve a product across specified languages. This endpoint requires authentication.
 
+**Query Parameters:**
+
+- `project_id`: string
+- `product_id`: string
+- `languages`: comma-separated list of language codes (e.g., `en,ru`)
+
+
+
+
+### 🔹 GET /products — List All Products
+
+List all products of a project across multiple languages. This endpoint requires authentication.
+
+**Query Parameters:**
+
+- `project_id`: string
+- `languages`: comma-separated list of language codes (e.g., `en,ru`)
+
+
+
+
+### 🔹 PUT /products/{product_id} — Update Product
+
+Update product details across all languages. This endpoint requires authentication.
+
+**Request Body:**
+
+```json
 {
   "project_id": "example",
   "product_id": "123",
@@ -70,18 +120,31 @@ Request body:
     "details": { "desc": "New description" }
   }
 }
-🔹 DELETE /products/{product_id} — Delete Product
-Remove a product in specified languages.
+```
 
-Query params:
 
-project_id: string
-languages: comma-separated list
-🔹 POST /ask_question — Ask Contextual Question
-Ask questions using project context, history, and service type.
 
-Request body:
 
+### 🔹 DELETE /products/{product_id} — Delete Product
+
+Remove a product in specified languages. This endpoint requires authentication.
+
+**Query Parameters:**
+
+- `project_id`: string
+- `product_id`: string
+- `languages`: comma-separated list of language codes (e.g., `en,ru`)
+
+
+
+
+### 🔹 POST /ask_question — Ask Contextual Question
+
+Ask questions using project context, history, and service type. This endpoint does **not** require authentication.
+
+**Request Body:**
+
+```json
 {
   "project_id": "example",
   "project_name": "Example Project",
@@ -91,37 +154,66 @@ Request body:
   "company_data": "Additional context …",
   "service_type": "support"
 }
-📌 service_type must be one of:
-sales / support / staff / q/a
+```
 
-🔹 DELETE /delete_project — Delete Entire Project
-Delete all data tied to a project.
+**Note:** `service_type` must be one of: `sales`, `support`, `staff`, `q/a`.
 
-Request body:
 
+
+
+### 🔹 DELETE /delete_project — Delete Entire Project
+
+Delete all data tied to a project. This endpoint requires authentication.
+
+**Request Body:**
+
+```json
 {
   "project_id": "example",
   "languages": ["en","ru"]
 }
-🔹 POST /data_upload — Upload Raw Data
-Upload raw or tabular project data for indexing.
+```
 
-Request body:
 
+
+
+### 🔹 POST /data_upload — Upload Raw Data
+
+Upload raw or tabular project data for indexing. This endpoint requires authentication.
+
+**Request Body:**
+
+```json
 {
   "project_id": "example",
   "row_data": "Some tabular data here",
   "languages": ["en","ru"]
 }
-🔹 POST /delete_all — Clear Entire Database
-Wipe all stored data across every project and language.
+```
 
-🧠 Notes
 
-Question answering and translations use an LLM via call_llm_with_functions.
-Data is stored per-language under keys like project_id_<lang> in the vector store.
-📂 Project Structure
 
+
+### 🔹 POST /delete_all — Clear Entire Database
+
+Wipe all stored data across every project and language. This endpoint requires authentication.
+
+---
+
+
+
+## 🧠 Notes
+
+Question answering and translations use an LLM via `call_llm_with_functions`.
+Data is stored per-language under keys like `project_id_<lang>` in the vector store.
+
+---
+
+
+
+## 📂 Project Structure
+
+```
 .
 ├── app.py                 # FastAPI application  
 ├── document_handler.py   # Core product & QA business logic  
@@ -133,7 +225,12 @@ Data is stored per-language under keys like project_id_<lang> in the vector stor
 ├── nginx.conf  
 ├── requirements.txt  
 └── README.md             # ← you’re here  
-📫 Contact
+```
 
+---
+
+
+
+## 📫 Contact
 Need help or want to collaborate? Reach me at:
 valiyevjavlon001@gmail.com

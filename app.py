@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from starlette.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict
@@ -6,8 +6,29 @@ from document_handler import DocumentHandler
 from enum import Enum
 
 app = FastAPI()
-
 handler = DocumentHandler()
+
+# -----------------------------
+# Middleware for Token Check
+# -----------------------------
+
+token = "Bearer a1b2c3"
+
+@app.middleware("http")
+async def token_check_middleware(request: Request, call_next):
+    # Endpoints to skip token check
+    skip_paths = ["/ask_question"]
+    if request.url.path in skip_paths:
+        return await call_next(request)
+
+    # Token validation
+    token = request.headers.get("authorization")
+    if not token or token != token:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Invalid or missing token"},
+        )
+    return await call_next(request)
 
 # -----------------------------
 # Pydantic Models
@@ -166,7 +187,6 @@ async def data_upload(request: DataUploadRequest):
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
     
-
 @app.post("/delete_all")
 async def delete_all():
     try:
