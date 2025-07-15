@@ -1,3 +1,5 @@
+import asyncio
+import json
 from data_prep.text_splitter import split_text
 import json
 # from langdetect import detect_langs
@@ -10,10 +12,9 @@ language = {
    "en": "English language",
 }
 
-def prepare_data(text, languages=['uz', 'ru']):
+async def prepare_data(text, languages=['uz', 'ru']):
     splitted_data = split_text(text, 2000, 10)
     
-    # System prompt for titling
     def get_sys_prompt(lang):
         return f"""
         You are an AI assistant tasked with titling text. Take a provided text (less than 2000 characters) as input. 
@@ -23,20 +24,30 @@ def prepare_data(text, languages=['uz', 'ru']):
         with a "title" (string) and "text" (string), following this structure: {{"title": str, "text": str}}. 
         Ensure the title is specific and descriptive, capturing the essence of the text without altering its content. 
         """
-    
+
     data = {}
     for lang in languages:
         data[lang] = {}
-        
+        tasks = []
         for i, chunk_text in enumerate(splitted_data):
-            
-            response = call_llm_with_functions(chunk_text, get_sys_prompt(lang))
-            # # cleaned_response = response.strip().replace('```json', '').replace('```', '').replace('\n', '')
-            # json_data = json.loads(cleaned_response)
-            
+            prompt = get_sys_prompt(lang)
+            tasks.append(call_llm_with_functions(chunk_text, prompt))
+
+        responses = await asyncio.gather(*tasks)
+
+        for i, response in enumerate(responses):
+            cleaned_response = response.strip().replace('```json', '').replace('```', '').replace('\n', '')
+            try:
+                json_data = json.loads(cleaned_response)
+                title = json_data.get('title')
+                text_out = json_data.get('text', splitted_data[i])
+            except Exception:
+                title = f"chunk_{i}"
+                text_out = splitted_data[i]
+
             data[lang][f"chunk_{i}"] = {
-                'title': "chunk_" + str(i),
-                'text': chunk_text
+                'title': title,
+                'text': text_out
             }
 
     return data
