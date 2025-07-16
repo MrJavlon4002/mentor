@@ -23,7 +23,6 @@ def contextualize_question(latest_question, chat_history, project_name=str, agen
 
 def answer_question(question_details: dict) -> str:
    chat_history = question_details["history"] or []
-   chat_history = chat_history[-10:] if len(chat_history) > 10 else chat_history
    agent_prompts = {
       "sales": prompts.sales_agent_prompt,
       "support": prompts.customer_support_agent_prompt,
@@ -40,7 +39,7 @@ def answer_question(question_details: dict) -> str:
       )
 
 
-   print(f" - Main question: {question_details['user_question']}\n - Documentary questions: {question_details['reformulations']}\n - Language: {question_details['lang']}\n - Context: {question_details['context']} \n - Chat history: {chat_history}")
+   # print(f" - Main question: {question_details['user_question']}\n - Documentary questions: {question_details['reformulations']}\n - Language: {question_details['lang']}\n - Context: {question_details['context']} \n - Chat history: {chat_history}")
    
    
 

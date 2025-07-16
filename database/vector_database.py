@@ -26,7 +26,7 @@ class WeaviateDatabase:
                 with collection.batch.dynamic() as batch:
                     for idx, chunk_data in enumerate(chunks.values()):
 
-                        print("=== ", chunks, " ===", lang)
+                        # print("=== ", chunks, " ===", lang)
                         batch.add_object(
 
                             properties={

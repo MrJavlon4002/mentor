@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     container_name: rag_weaviate
     ports:
-      - "8080:8080" 
+      - "8085:8080" 
       - "50051:50051"
     volumes:
       - weaviate_data:/var/lib/weaviate
@@ -19,6 +19,7 @@ services:
     build: .
     container_name: rag-api
     restart: always
+    privileged: true
     ports:
      - "8000:8000"
     volumes:

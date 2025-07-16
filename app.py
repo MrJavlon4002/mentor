@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict
 from document_handler import DocumentHandler
 from enum import Enum
+from typing import Any
 
 app = FastAPI()
 handler = DocumentHandler()
@@ -12,18 +13,18 @@ handler = DocumentHandler()
 # Middleware for Token Check
 # -----------------------------
 
-token = "Bearer a1b2c3"
+base_token = "Bearer a1b2c3"
 
 @app.middleware("http")
 async def token_check_middleware(request: Request, call_next):
     # Endpoints to skip token check
-    skip_paths = ["/ask_question"]
+    skip_paths = []
     if request.url.path in skip_paths:
         return await call_next(request)
 
     # Token validation
     token = request.headers.get("authorization")
-    if not token or token != token:
+    if not token or token != base_token:
         return JSONResponse(
             status_code=401,
             content={"detail": "Invalid or missing token"},
@@ -64,7 +65,7 @@ class AskQuestionRequest(BaseModel):
     project_id: str
     project_name: str
     user_question: str
-    history: Optional[List[str]] = []
+    history: list[dict[str, Any]] = []
     lang: str
     company_data: Optional[str] = ""
     service_type: ServiceType
