@@ -302,4 +302,8 @@ def get_sys_prompt(lang):
   with a "title" (string) and "text" (string), following this structure: {{"title": str, "text": str}}. 
   Ensure the title is specific and descriptive, capturing the essence of the text without altering its content. 
   RESPONSE HAVE TO BE TRANSLATED INTO THE {language[lang]}.
+<<<<<<< HEAD
   """
+=======
+  """
+>>>>>>> d815da21c5ac54bf3a484e8f2acfd2878ee5130d

@@ -1,9 +1,9 @@
-from general.gemini_call import call_llm_with_functions
+from general.gemini_call import call_gemini_async
 import general.agent_prompts as prompts
 import json
 
 
-def contextualize_question(latest_question, chat_history, project_name=str, agent_type = str, lang=str) -> list:
+async def contextualize_question(latest_question, chat_history, project_name=str, agent_type=str, lang=str) -> list:
     # first thing: bind the local variable
    chat_history = chat_history or []
    chat_history = chat_history[-3:] if len(chat_history) > 3 else chat_history
@@ -13,15 +13,16 @@ def contextualize_question(latest_question, chat_history, project_name=str, agen
    messages = f"CHAT HISTORY: {chat_history}\nLatest question: {latest_question}"
 
 
-   result = call_llm_with_functions(
+   result = (await call_gemini_async(
        messages=messages,
        system_instruction=system_instruction
-   ).split("\n")
+   )).split("\n")
+
 
    return result
 
 
-def answer_question(question_details: dict) -> str:
+async def answer_question(question_details: dict) -> str:
    chat_history = question_details["history"] or []
    agent_prompts = {
       "sales": prompts.sales_agent_prompt,
@@ -44,8 +45,8 @@ def answer_question(question_details: dict) -> str:
    
 
    messages = f'*Company Data*: {question_details["context"]}\n*Documentary questions*: {question_details["reformulations"]}, *Main question*: {question_details["user_question"]}, *Chat history*: {chat_history}.'
-   
-   response = call_llm_with_functions(
+
+   response = await call_gemini_async(
        messages=messages,
        system_instruction=system_instruction
    )

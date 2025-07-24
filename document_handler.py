@@ -19,16 +19,16 @@ class DocumentHandler:
         logger.addHandler(handler)
         return logger
 
-    def data_upload(self, project_id: str, row_data: str, languages: List[str]) -> None:
-        """Upload and insert data into a language-specific collection."""
+    async def data_upload(self, project_id: str, row_data: str, languages: List[str]) -> None:
         try:
-            processed_data = prepare_data(row_data, languages)
+            processed_data = await prepare_data(row_data, languages)
             self.client.initialize_and_insert_data(processed_data, project_id=project_id)
             for lang in languages:
                 self.logger.info(f"Data inserted for project {project_id}_{lang}")
         except Exception as e:
             self.logger.error(f"Upload failed: {e}")
             raise
+
 
     def create_product(self, details: Dict[str, Any], project_id: str, lang: str) -> Dict[str, Any]:
         """
@@ -119,7 +119,7 @@ class DocumentHandler:
             self.logger.error(f"Failed to delete all data: {e}")
             return False
 
-    def ask_question(self, question_details: Dict[str, Any]) -> Dict[str, Any]:
+    async def ask_question(self, question_details: Dict[str, Any]) -> Dict[str, Any]:
         start = time.time()
         required_keys = ["history", "user_question", "project_id", "lang", "company_data", "project_name"]
         for key in required_keys:
@@ -127,7 +127,7 @@ class DocumentHandler:
                 return {"error": f"Missing key: {key}"}
 
         try:
-            q_texts = contextualize_question(
+            q_texts = await contextualize_question(
                 chat_history=question_details["history"],
                 latest_question=question_details["user_question"],
                 project_name=question_details["project_name"],
@@ -143,7 +143,7 @@ class DocumentHandler:
                 ) for q in q_texts if q
             ]
 
-            response = answer_question({
+            response = await answer_question({
                 "context": context,
                 "reformulations": q_texts,
                 "user_question": question_details["user_question"],

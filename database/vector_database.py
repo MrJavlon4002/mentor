@@ -16,7 +16,6 @@ class WeaviateDatabase:
     def initialize_and_insert_data(self, row_data, project_id: str):
         
         with self._create_client() as client:
-            # print("Existing collections deleted.")
             for lang, chunks in row_data.items():
                 project_id_lang = f"{project_id}_{lang}"
                 self._ensure_collection_exists(client, project_id_lang)
@@ -25,8 +24,6 @@ class WeaviateDatabase:
 
                 with collection.batch.dynamic() as batch:
                     for idx, chunk_data in enumerate(chunks.values()):
-
-                        # print("=== ", chunks, " ===", lang)
                         batch.add_object(
 
                             properties={

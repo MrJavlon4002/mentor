@@ -1,42 +1,27 @@
 from data_prep.text_splitter import split_text
 import json
-# from langdetect import detect_langs
-from general.openai_call import call_llm_with_functions
-from general.gemini_call import call_llm_with_functions
+from general.gemini_call import batch_gemini_requests
+from general.agent_prompts import get_sys_prompt
 
-language = {
-   "uz": "Uzbek Language",
-   "ru": "Russian language",
-   "en": "English language",
-}
 
-def prepare_data(text, languages=['uz', 'ru']):
+async def prepare_data(text, languages=['uz', 'ru']):
     splitted_data = split_text(text, 2000, 10)
-    
-    # System prompt for titling
-    def get_sys_prompt(lang):
-        return f"""
-        You are an AI assistant tasked with titling text. Take a provided text (less than 2000 characters) as input. 
-        All text and title you wil return HAVE TO BE in the {language[lang]}. Translate even text into {language[lang]}.
-        Treat the text as a single unit without splitting it. Generate a clear and detailed title that fully reflects 
-        its content. Exclude any sentences that do not fit the text's context. Format the response as a JSON object 
-        with a "title" (string) and "text" (string), following this structure: {{"title": str, "text": str}}. 
-        Ensure the title is specific and descriptive, capturing the essence of the text without altering its content. 
-        """
-    
     data = {}
-    for lang in languages:
-        data[lang] = {}
-        
-        for i, chunk_text in enumerate(splitted_data):
-            
-            response = call_llm_with_functions(chunk_text, get_sys_prompt(lang))
-            cleaned_response = response.strip().replace('```json', '').replace('```', '').replace('\n', '')
-            json_data = json.loads(cleaned_response)
-            
-            data[lang][f"chunk_{i}"] = {
-                'title': "chunk_" + str(i),
-                'text': chunk_text
-            }
 
+    for lang in languages:
+        sys_prompt = get_sys_prompt(lang)
+        request_pairs = [(chunk_text, sys_prompt) for chunk_text in splitted_data]
+        responses = await batch_gemini_requests(request_pairs)
+
+        data[lang] = {}
+        for i, response in enumerate(responses):
+            if isinstance(response, dict) and "error" in response:
+                data[lang][f"chunk_{i}"] = {"title": "", "text": f"ERROR: {response['error']}"}
+            else:
+                cleaned_response = response.strip().replace('```json', '').replace('```', '').replace('\n', '')
+                json_data = json.loads(cleaned_response)
+                data[lang][f"chunk_{i}"] = {
+                    'title': json_data.get("title", ""),
+                    'text': json_data.get("text", "")
+                }
     return data
