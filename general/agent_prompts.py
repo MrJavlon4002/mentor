@@ -187,6 +187,8 @@ Output:
 }}
 
 COMPANY DATA: {company_data}
+
+DO NOT FORGET RESPONSEE NEED TO BE IN {lang} LANGUAGE AND IN JSON FORMAT.
 """
 
 
@@ -291,3 +293,13 @@ Output:
 COMPANY DATA: {company_data}
 """
 
+def get_sys_prompt(lang):
+  return f"""
+  You are an AI assistant tasked with titling text in asked language. Take a provided text (less than 2000 characters) as input. 
+  All text and title you wil return HAVE TO BE in the {language[lang]}. Translate even text into {language[lang]}.
+  Treat the text as a single unit without splitting it. Generate a clear and detailed title that fully reflects 
+  its content. Exclude any sentences that do not fit the text's context. Format the response as a JSON object 
+  with a "title" (string) and "text" (string), following this structure: {{"title": str, "text": str}}. 
+  Ensure the title is specific and descriptive, capturing the essence of the text without altering its content. 
+  RESPONSE HAVE TO BE TRANSLATED INTO THE {language[lang]}.
+  """
