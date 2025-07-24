@@ -1,30 +1,36 @@
+import asyncio
 import google.generativeai as genai
 import api_keys
 
-gemini_model = "gemini-2.0-flash"
+async def call_gemini_async(messages, system_instruction):
 
-def call_llm_with_functions(messages: str, system_instruction: str):
-    """
-    Call the Gemini API with tools and handle responses or errors gracefully.
-    """
     genai.configure(api_key=api_keys.GEMINI_API_KEY)
     model = genai.GenerativeModel(
-        model_name=gemini_model,
+        model_name="gemini-2.0-flash",
         system_instruction=system_instruction
     )
 
-    try:
-        response = model.generate_content(
+    def _sync_call():
+        return model.generate_content(
             contents=[messages],
-            generation_config=genai.types.GenerationConfig(
-                temperature=0.3,
-            ),
+            generation_config=genai.types.GenerationConfig(temperature=0.3),
         )
+
+    try:
+        response = await asyncio.to_thread(_sync_call)
         if response.candidates and response.candidates[0].content.parts:
             return response.candidates[0].content.parts[0].text
         else:
             return {"error": "No content found in the response."}
-    
     except Exception as e:
-        print(f"Error during Gemini call: {e}")
         return {"error": str(e)}
+    
+async def batch_gemini_requests(list_of_message_instruction_pairs):
+    tasks = [
+        call_gemini_async(messages, sys_instr)
+        for messages, sys_instr in list_of_message_instruction_pairs
+    ]
+    results = await asyncio.gather(*tasks)
+    return results
+
+

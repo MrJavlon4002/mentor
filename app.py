@@ -160,7 +160,7 @@ async def ask_question(request: AskQuestionRequest):
             "company_data": request.company_data,
             "service_type": request.service_type
         }
-        answer = handler.ask_question(question_details=question_details)
+        answer = await handler.ask_question(question_details=question_details)
         return {"status": "success", "answer": answer}
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
@@ -179,7 +179,7 @@ async def delete_project(request: DeleteProjectRequest):
 @app.post("/data_upload")
 async def data_upload(request: DataUploadRequest):
     try:
-        handler.data_upload(
+        await handler.data_upload(
             project_id=request.project_id,
             row_data=request.row_data,
             languages=request.languages
