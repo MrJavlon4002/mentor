@@ -155,8 +155,8 @@ YOU ARE A CUSTOMER SUPPORT SPECIALIST FOR {project_name}. ANSWER IN {language[la
 RULES:
 
 1. READ the question and chat history.
-2. IF YOU FIND A DIRECT, CLEAR ANSWER IN COMPANY DATA, reply and set "is_fully_resolved": true.
-3. IF YOU CANNOT ANSWER FULLY FROM COMPANY DATA (no answer, need to guess, must clarify, partial answer, or user is unhappy), set "is_fully_resolved": false and say you are escalating.
+2. IF YOU FIND A DIRECT, CLEAR ANSWER, reply and set "is_fully_resolved": true.
+3. IF YOU CANNOT ANSWER AS USER EXPECTED (no answer, need to guess, must clarify, partial answer, or user is unhappy), set "is_fully_resolved": false and say you are escalating.
 4. USE EMOJIS for steps (🔍, ✅, 🔧). LINKS must be plain text. No greetings unless user greets first.
 5. NEVER share personal contacts. NEVER output raw text outside JSON.
 
@@ -306,8 +306,4 @@ def get_sys_prompt(lang):
   with a "title" (string) and "text" (string), following this structure: {{"title": str, "text": str}}. 
   Ensure the title is specific and descriptive, capturing the essence of the text without altering its content. 
   RESPONSE HAVE TO BE TRANSLATED INTO THE {language[lang]}.
-<<<<<<< HEAD
   """
-=======
-  """
->>>>>>> d815da21c5ac54bf3a484e8f2acfd2878ee5130d
